@@ -1,0 +1,97 @@
+\title{A Statistical Analysis of Chicago Traffic}
+\author{Tristan Rasmussen}
+\date{\today}
+
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[caption = false]{subfig}
+  
+\begin{document}
+\maketitle
+\section{Introduction}
+Some studies indicate that city traffic and gridlock is wasting around [xxx] dollars a year. As such it might be interesting to perform a statistical analysis of traffic data to gain a better understanding of the problem.
+\section{Description of the Data}
+There are three main data sets that will be analysed in this paper: estimates of congestion in Chicago by region, estimates of congestion in Chicago by segment, and a list of all sports games in Chicago.
+\subsection{Chicago Congestion}
+The estimates of congestion are divided into two categories: segment data and regional data. The segment data contains the average speed of 1250 segments measure every 10 minutes; however, the data only extends for about a month and a half. The regional data contains the average speed in 23 regions of Chicago and contains data over a three year time period from 2011 to 2013. Most of the analysis will be carried out over the regional data, simply because of the longer time period. This data was cleaned by removing invalid read values, and extremely high speeds (over 60 mph on municipal roads is very rare). The times of the measurements were broken down into year, month, day, hour, minute, day of week, and weekend. 
+\subsection{Chicago Sports Games}
+In addition to simple time data, it was speculated that sports games would have a significant impact on congestion during game days. To measure this data was gathered on all of the sports games of the five main Chicago sports teams: the Bears (NFL), the Bulls (NBA), the White Sox (MLB), the Cubs (MLB), and the Blackhawks (NHL). This data was aggregated from a number of sources [insert sources here] and then aggregated. The only values of interest were the day of the game and whether the team won or lost. This data was then added to the congestion data described above to create the final data set.
+\subsection{Preliminary exploration and Visualization}
+In order to provide tools for visualizing and exploring the data and the models that we have constructed, we have created a web application (hosted [here]) that allows for an interactive exploration of the data overlaid on a map of Chicago.
+
+[Some additional plots here]
+\subsection{Goals}
+The ultimate goal of this paper is to build a statistical model for traffic in the city of Chicago. There are two components that we will explore in this paper: estimating the probability distribution of traffic in Chicago and building a regression model for the data. The goal of building a density estimate is [what?]. The goal of building a regression model is to provide predictive power for the average traffic speed based on the parameters given above.
+\subsection{Methods}
+When performing regression analysis, we have withheld about 25\% of the data to use as a test set. This data has been selected randomly from the entire training set. The model is trained on the remaining 75\% and then tested against the test set. Individual models have been built for each region.
+\section{Parametric Analysis}
+\begin{table}
+\begin{tabular}{|l|l|l|}
+\hline
+Region ID & $\mu$ & $\sigma$\\\hline
+1 & 24.697801 $\pm$ 0.022228 & 2.931518\\\hline
+2 & 28.991722 $\pm$ 0.019415 & 2.614829\\\hline
+3 & 24.967138 $\pm$ 0.024994 & 3.448271\\\hline
+4 & 23.052651 $\pm$ 0.025400 & 3.429280\\\hline
+5 & 25.890058 $\pm$ 0.023019 & 3.058450\\\hline
+6 & 24.246442 $\pm$ 0.024921 & 3.393697\\\hline
+7 & 23.805981 $\pm$ 0.023463 & 3.155498\\\hline
+8 & 22.587990 $\pm$ 0.025805 & 3.578877\\\hline
+9 & 25.737242 $\pm$ 0.022743 & 2.969804\\\hline
+10 & 24.507356 $\pm$ 0.021532 & 2.999743\\\hline
+11 & 24.226650 $\pm$ 0.026715 & 3.716619\\\hline
+12 & 20.780952 $\pm$ 0.031236 & 4.281174\\\hline
+13 & 19.058748 $\pm$ 0.031712 & 4.419897\\\hline
+14 & 26.446459 $\pm$ 0.024094 & 3.272564\\\hline
+15 & 27.356264 $\pm$ 0.024014 & 3.307650\\\hline
+16 & 28.148639 $\pm$ 0.027105 & 3.469245\\\hline
+17 & 30.015234 $\pm$ 0.024633 & 3.053233\\\hline
+18 & 27.013029 $\pm$ 0.023081 & 3.201800\\\hline
+19 & 26.337392 $\pm$ 0.020474 & 2.850558\\\hline
+20 & 27.081739 $\pm$ 0.022002 & 3.003730\\\hline
+21 & 26.525628 $\pm$ 0.023895 & 3.221976\\\hline
+22 & 30.250759 $\pm$ 0.019234 & 2.580613\\\hline
+23 & 24.408021 $\pm$ 0.020131 & 2.806418\\\hline
+24 & 26.036382 $\pm$ 0.022289 & 3.019421\\\hline
+25 & 31.352320 $\pm$ 0.020673 & 2.620213\\\hline
+26 & 29.973643 $\pm$ 0.022522 & 3.063198\\\hline
+27 & 30.945219 $\pm$ 0.021275 & 2.845948\\\hline
+28 & 33.359715 $\pm$ 0.036218 & 3.719515\\\hline
+29 & 23.721448 $\pm$ 0.030303 & 3.865192\\\hline
+\end{tabular}
+\end{table}
+\subsection{Density Estimation}
+As outlined above, we are interested in modelling the distribution of traffic speeds in the city of Chicago by region. To perform a parametric estimate of the density we must first decide on a model that we believe the speeds follow, and then we can calculate maximum likelihood parameters to produce a viable model.
+
+To begin with we assumed that traffic speed followed a normal distribution. [Why would we believe this?]. Using this model it is relatively easy to calculate the maximum likelihood values for the mean and standard deviation. Computing this over the 29 regions gives the data found in columns 1 and 2 of Table \ref{•}.
+
+In addition to simply computing the distribution, we can examine how well this distribution fits the actual data graphically and numerically. To examine the applicability of our model graphically we created QQ plots. Several of these plots look relatively close to linear, indicating that the underlying distributions are close to normal. However, there are also several plots which exhibit strong non linearity; this indicates that the normal distribution model may not be entirely accurate for all of the regions in question.
+
+%In an attempt at a parametric estimate of the density we first made the assumption that the data was normally distributed. Under this assumption we could fit a density by simply calculating the sample mean and standard deviation and using these to create density estimates. 
+
+%To asses the accuracy of our normality assumptions we produced QQ plots for each region. A cursory inspection of each individual region seems to show that the normality assumption is not a very accurate one for this data set. [Insert some images here]. We quantify this later with a KS test.
+%[I need some justification for this]
+\subsection{Regression Analysis}
+The second goal we have outlined above is to produce a viable model of traffic using time and sports games as parameters. We chose to take two different parametric approaches to this problem: a simple linear regression, and a higher order cubic regression.
+\subsubsection{Linear Regression}
+Linear regressions are the gold standard for an initial shot at predicting a model from input. This model assumes that the data is a linear function of the independent variables.  In our analysis we trained several different linear models and chose the one that had the lowest testing error of any linear model. We then used this model to build a fit for the entire data set.
+
+
+Having looked at the density of traffic speeds we then turned our investigation to modelling traffic speed as a function of time and sports games. We tried two different classes of regressions for each region: a simple linear model and a polynomial model. A number of different models were tried and the one with the lowest test error was ultimately chosen as the winning model. We present the MSE on the testing data produced by both the linear model and the polynomial model, along with the winning model. We report below the MSE produced by the best model on the entire training data set, the $r^2$, and the model that produced this fit.
+\section{Nonparametric Analysis}
+\subsection{Density Estimation}
+To begin with we wanted to asses the accuracy of the normal density created above, but we were unable to go beyond a simple QQ plot. Once we enter the realm of nonparametric statistics we can quantify this by performing a KS test against the predicted value. The following table gives the predicted KS values.
+
+Having seen the failings of the normal density estimate, we can attempt to create a better density estimate using a kernel density estimate. These were created and we produced 95\% confidence bands.
+\subsection{Regression Analysis}
+To try to improve upon the regressions produced by the parametric models, we can try to produce a local linear regression. These have been produced and we looked at some stuff.
+\section{Discussion}
+\subsection{Density Estimation}
+In this case it seems that the assuming a normal distribution was quite a mistake. 
+\subsection{Regression Analysis}
+Nonlinear does pretty well, and the local linear regression does ok as well. And some other conclusions.
+\end{document}
