@@ -1,7 +1,9 @@
 library('locfit')
 
-# Load and prepare the data
+PLOT_DIR = '../plots/'
+MODEL_DIR = '../models/'
 
+# Load and prepare the data
 region_data <- read.table('../dat/augmented_region_data.csv', header=TRUE, sep=',')
 #segment_data <- read.table('../dat/augmented_segment_data.csv', header=TRUE, sep=',')
 
@@ -36,7 +38,7 @@ parametric_density_estimation <- function (dat, alpha = 0.05,
   print(sprintf("%f %f %f", mu, mu_error, sigma))
   
   # Plotting
-  if (save_plots) {png(paste(save_prefix, '-qqplot', sep=''))}
+  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-qqplot', sep=''))}
   qqnorm(dat$speed)
   if (save_plots) { dev.off()}
 }
@@ -125,6 +127,12 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   cat(deparse(best_linear_model))
   print('')
   cat(deparse(best_nonlinear_model))
+  
+  # Save any models/graphs
+  if (save_plots) {
+    saveRDS(best_linear_fit, paste(MODEL_DIR, save_prefix, '-linear.RData', sep=''))
+    saveRDS(best_nonlinear_fit, paste(MODEL_DIR, save_prefix, '-nonlinear.RData', sep=''))
+  }
 }
 
 nonparametric_density_estimation <- function (dat, alpha = 0.05,
@@ -140,52 +148,127 @@ nonparametric_density_estimation <- function (dat, alpha = 0.05,
   # Create a density estimate
   density = density(dat$speed)
   
-  if (save_plots) {png(paste(save_prefix, '-nonpar-density', sep=''))}
+  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-nonpar-density', sep=''))}
   plot(density)
   if (save_plots) { dev.off()}
 }
 
-nonparametric_regression <- function (dat, save_plots=FALSE, save_prefix='') {
+run_cross_validation <- function(model, train_data, alphas) {
+  # Runs leave one out cross validation for a linear smoother.
+  # Args:
+  #   model: A formula that will be used as the local linear regression formula.
+  #   data_set: The data set that the local linear regression should be trained on.
+  #   alphas: A sequence of alphas to be run with
+  best_cv = Inf
+  best_alpha = NULL
+  for (alpha in alphas) {
+    fit = do.call('locfit', list(formula(model), data=train_data, alpha=alpha))
+    r = residuals(fit)
+    infl = fitted(fit, what = "infl")
+    cv_score = mean((r/(1-infl))^2)
+    if (cv_score < best_cv) {
+      best_cv = cv_score
+      best_alpha = alpha
+    }
+  }
+  return (best_alpha)
+}
+
+select_model_nonparametric <- function(models, dat, test_percent, num_runs = 10) {
+  # This function will select the model that produces the lowest average risk.
+  # Args:
+  #   models: All models that will be tested.
+  #   dat: Data that the model should be trained/tested on.
+  #   test_percent: What percent of dat should be held out as test data.
+  #   num_runs: How many runs should be used to estimate the risk of a specific model.
+  min_aic = Inf
+  best_model = NULL
+  for (model in models) {
+    all_mses = c()
+    
+    best_alpha = 0.1
+    aic_value = aic(formula(model), dat=train_data, alpha=best_alpha)
+    if (aic_value < min_aic) {
+      min_aic = aic_value
+      best_model = model
+    }
+    #for (run in 1:num_runs) {
+    #  test_rows = sample(1:nrow(dat), nrow(dat) * test_percent, replace=FALSE)
+    #  test_data <- dat[test_rows, ]
+    #  train_data <- dat[-test_rows, ]
+      
+      # Fit the model
+      #best_alpha = run_cross_validation(formula(model), train_data, seq(0.1, 1, 0.1))
+    #  best_alpha = 0.1
+      
+    #  fit = 
+      
+      # Compute MSE on the test data
+    #  all_mses = c(all_mses, mean((suppressWarnings(predict(fit, test_data)) - test_data$speed)^2))
+    #}
+    #estimated_risk = mean(all_mses)
+    #if (estimated_risk < min_risk) {
+    #  min_risk = estimated_risk
+    #  best_model = model
+    #}
+  }
+  return (best_model)
+}
+
+nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
+                                      save_plots=FALSE, save_prefix='') {
+  # This function will perform a nonparametric regression of the speed data and return
+  # vital statistics
+  # Args:
+  #    dat: The data set to be examined. Must have a 'speed' value.
+  #    save_plots: A flag to indicate if plots should be saved or displayed.
+  #    save_prefix: A prefix to be prepended to all plots saved by this function.
   
-  fit = locfit(speed ~ hour, data = dat)
-  mse = mean(fit$residuals^2)
+  if (!is.null(seed)) { set.seed(seed) } 
+  
+  all_models = list(speed ~ hour,
+                    speed ~ hour + weekend * hour,
+                    
+                    # Add sports effects
+                    speed ~ hour + weekend * hour + any_game,
+                    speed ~ hour + weekend * hour + bears,
+                    speed ~ hour + weekend * hour + bulls,
+                    speed ~ hour + weekend * hour + blackhawks,
+                    speed ~ hour + weekend * hour + bulls,
+                    speed ~ hour + weekend * hour + whitesox
+                    )
+  
+  # First we select a model
+  model = select_model_nonparametric(all_models, dat, test_percent)
+  # Determine bandwidth
+  #alpha = run_cross_validation(model, dat, seq(0.1, 1, 0.1))
+  alpha = 0.1
+  
+  # Construct the actual fit
+  fit = locfit(formula(model), data=dat, alpha=alpha)
+  # Compute the mse
+  mse = mean((predict(fit, dat) - dat$speed)^2)
+  print(model)
   print(mse)
+  
+  # Save plots and models
+  if (save_plots) {
+    saveRDS(fit, paste(MODEL_DIR, save_prefix, '-nonparametric.RData', sep=''))
+  }
+}
+
+run_analysis <- function(data_set, save_plots = FALSE, save_prefix = '') {
+  # This function will essentially call all the other functions in this file.
+  parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  parametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  nonparametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
+}
+
+for (region_id in 1:29) {
+  print(sprintf("Running analysis for %d", region_id))
+  run_analysis(region_data[region_data$id == region_id,], TRUE, toString(region_id))
 }
 
 #### FOR TESTING ####
 current_data = region_data[region_data$id == 13,]
-
-# For the time being we'll look at region 13 (Downtown Loop)
-current_data = dat[dat$region_id == 13,]
-
-
-xs = seq(0, 40, length = 1000)
-# For actual analysis we'll build one model for each region of Chicago
-for (region in 1:29) {
-  current_data = dat[dat$region_id == region,]
-  train_data = current_data[current_data$day < 25,]
-  test_data = current_data[current_data$day >= 25,]
-  
-  #plot(current_data$hour, current_data$speed)
-  
-  # Non parametric density estimation
-  plot(density(train_data$speed), col='blue')
-  
-  # Fit a gaussian
-  mu = mean(train_data$speed)
-  sigma = sd(train_data$speed)
-  lines(xs, dnorm(xs, mean=mu, sd=sigma), type='l')
-  
-  # Fit a simple linear regression
-  fit = lm(speed ~ poly(hour, 3) + weekend * hour, data=train_data)
-  predictions = predict(fit, test_data)
-  print("Linear Regression")
-  print(1 / length(predictions) * sum((predictions- test_data$speed)^2))
-  
-  # Fit a local linear regression
-  fit = locfit(speed ~ hour + weekend * hour, data=train_data)
-  # Calculate the error
-  predictions = predict(fit, test_data)
-  print("Local Linear Regression")
-  print(1 / length(predictions) * sum((predictions- test_data$speed)^2))
-}
