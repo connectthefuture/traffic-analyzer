@@ -119,12 +119,15 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   nonlinear_testing_error = mean((suppressWarnings(predict(best_nonlinear_fit, test_data)) - test_data$speed)^2)
   
   # Print out everything of use
-  print(sprintf("Linear, Training error: %f, Testing error: %f", linear_training_error, linear_testing_error))
-  print(sprintf("Nonlinear, Training error: %f, Testing error: %f", nonlinear_training_error, nonlinear_testing_error))
-  print("Best Linear model")
-  print(best_linear_model)
-  print("Best Nonlinear model")
-  print(best_nonlinear_model)
+  #print(sprintf("Linear, Training error: %f, Testing error: %f", linear_training_error, linear_testing_error))
+  #print(sprintf("Nonlinear, Training error: %f, Testing error: %f", nonlinear_training_error, nonlinear_testing_error))
+  #print("Best Linear model")
+  #print(best_linear_model)
+  #print("Best Nonlinear model")
+  #print(best_nonlinear_model)
+  print(sprintf("%.2f & %.2f, %.2f, %.2f, %.2f, %.2f", 
+                linear_training_error, linear_testing_error, summary(best_linear_fit)$r.squared,
+                nonlinear_training_error, nonlinear_testing_error, summary(best_nonlinear_fit)$r.squared))
   
   # Save any models/graphs
   if (save_plots) {
@@ -227,8 +230,9 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   
   # First we select a model
   model = select_model_nonparametric(all_models, train_data, test_percent)
+  model = speed ~ .
   # Determine bandwidth
-  #alpha = run_cross_validation(model, dat, seq(0.05, 0.4, 0.05))
+  #alpha = run_cross_validation(model, dat, seq(0.1))
   alpha = 0.1
   
   # Construct the actual fit
@@ -238,12 +242,13 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   training_error = mean((predict(fit, train_data) - train_data$speed)^2)
   testing_error = mean((predict(fit, test_data) - test_data$speed)^2)
   
-  print(sprintf("Nonparametric, Training error: %f, Testing error: %f", training_error, testing_error))
-  print("Best nonparametric model")
-  print(model)
-  print("Best bandwidth")
-  print(alpha)
-        
+  #print(sprintf("Nonparametric, Training error: %f, Testing error: %f", training_error, testing_error))
+  #print("Best nonparametric model")
+  #print(model)
+  #print("Best bandwidth")
+  #print(alpha)
+  print(sprintf(", %.2f, %.2f", training_error, testing_error))
+  
   # Save plots and models
   if (save_plots) {
     saveRDS(fit, paste(MODEL_DIR, save_prefix, '-nonparametric.RData', sep=''))
@@ -252,9 +257,9 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
 
 run_analysis <- function(data_set, save_plots = FALSE, save_prefix = '') {
   # This function will essentially call all the other functions in this file.
-  parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  #parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
   parametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
-  nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  #nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
   nonparametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
 }
 

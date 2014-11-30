@@ -3,7 +3,8 @@
 \date{\today}
 
 \documentclass[12pt]{article}
-\usepackage{multicol}
+%\usepackage{multicol}
+%\twocolumn
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{bm}
@@ -14,9 +15,10 @@
   
 \begin{document}
 \maketitle
-\begin{multicols*}{2}
 \section{Introduction}
 Everybody hates traffic. Some studies have show that traffic ends up costing Americans over 120 billion dollars a year \cite{costoftraffic}. However, before trying to address the problem of traffic it is imperative that we form accurate statistical models of traffic flow and the variables that affect it. In this paper, we perform both a parametric and nonparametric analysis of traffic in the city of Chicago.
+\subsection{Goals}
+The ultimate goal of this paper is to build a statistical model for traffic in the city of Chicago. To do this we will explore two components of building a model both parametrically and nonparametrically. First we will explore how we can estimate the probability density of traffic speeds; this is useful for visualizing the data, as well as future statistical calculations. Afterwards we will look into building a regression model for the data, with the goal of accurately predicting the traffic given a set of independent variables.
 \section{Description of the Data}
 For the purposes of this paper we will be examining Chicago traffic data conjunction with data about sports games in the city. These data sets were obtained separately and then combine together.
 \subsection{Chicago Congestion}
@@ -27,15 +29,136 @@ In addition to data about regions, the City of Chicago provides more detailed da
 The second data set of interest was a collection of all sports games that have happened in Chicago during the period of interest (03/12/2011 - 03/26/2013). We predicted that sports games would have a significant impact on traffic and so would be a useful feature to add to the data set. Unfortunately, we were unable to find a single comprehensive list of all sports games in Chicago and were forced to go to individual sites. We gathered the dates of every Bulls \cite{bullsdata}, Bears \cite{bearsdata}, Whitesox \cite{whitesoxdata}, Cubs \cite{cubsdata} and Blackhawks \cite{blackhawksdata} game in the time period and created a data set where each point was a date and the games that occurred on that date.
 \subsection{Data Preprocessing}
 Once the above datasets were gathered they were combine into a single data set that contained all of the information we wanted. Each timestamp was broken down into year, month, day, hour, minute, day of week, and a flag indicating if it was a weekend or not. In addition a day label was added that indexed the days sequentially. Finally we added a column that was true if there was any sports game on a day and false otherwise. Once all of this preliminary processing was done, we cleaned up the data set by removing any data points that had invalid speeds (either caused by having 0 bus reads or by having a speed over 40 mph when most roads have a speed limit of 30 mph). 
-\subsection{Preliminary exploration and Visualization}
-In order to provide tools for visualizing and exploring the data and the models that we have constructed, we have created a web application (hosted [here]) that allows for an interactive exploration of the data overlaid on a map of Chicago.
+\subsection{Preliminary Exploration and Visualization}
+Having discussed the data that we examined we will now provide several visualizations to give the reader a better sense of the data set. First, Figure \ref{speedvshour13} shows the speed as a function of hour in region 13 (Down town Chicago Loop); the drop in during the day, especially around 5 PM should make intutive sense to anybody who has worked in down town Chicago. We have also constructed a lightewight web application to interact with the results of this analysis \cite{trafficapp}; Figure \ref{appscreenshot} shows a screen shot of this application to illustrate the regions of interest and average traffic patters at 5 PM. Finally, Figure \ref{region11games} illustrates the average speed in Region 11 (containing the United Center) when there was no sports game (red Xs) and when there was a Bulls or Blackhawks game (black Os). Most noticeably there is a significant dip in the later evening that seems to be the result of the game.
+\begin{figure}[ht!]
+\includegraphics[width=\linewidth]{../plots/speedvshour13}
+\caption{Speed vs Hour in Region 13}
+\label{speedvshour13}
+\end{figure}
+\begin{figure}[ht!]
+\includegraphics[width=\linewidth]{../plots/region11games}
+\caption{Speed vs Hour in Region 11 with and without sports games}
+\label{region11games}
+\end{figure}
 
-[Some additional plots here]
-\subsection{Goals}
-The ultimate goal of this paper is to build a statistical model for traffic in the city of Chicago. There are two components that we will explore in this paper: estimating the probability distribution of traffic in Chicago and building a regression model for the data. The goal of building a density estimate is [what?]. The goal of building a regression model is to provide predictive power for the average traffic speed based on the parameters given above.
-\subsection{Methods}
-When performing regression analysis, we have withheld about 25\% of the data to use as a test set. This data has been selected randomly from the entire training set. The model is trained on the remaining 75\% and then tested against the test set. Individual models have been built for each region.
+
+\begin{table}
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|}
+\hline
+ID & L Train & NL Train & NP Train & L Test & NL Test & NP Test & L $r^2$ & NL $r^2$\\\hline
+1&6.3&4.35&4.81&6.17&4.37&4.86&0.27&0.49\\\hline
+2&6.5&6.23&5.68&6.59&6.31&5.76&0.05&0.09\\\hline
+3&8.61&5.36&4.86&8.67&5.51&4.97&0.28&0.55\\\hline
+4&7.96&4.67&4.51&7.87&4.64&4.32&0.32&0.6\\\hline
+5&7.13&4.77&4.53&7&4.59&4.5&0.24&0.49\\\hline
+6&8.29&5.46&4.97&8.35&5.5&4.99&0.28&0.53\\\hline
+7&7.31&4.61&4.61&7.37&4.68&4.58&0.27&0.54\\\hline
+8&8.61&5.31&4.28&8.68&5.43&4.32&0.32&0.58\\\hline
+9&7.18&4.97&5.06&7.03&4.96&5.24&0.19&0.44\\\hline
+10&6.86&5.49&5.54&6.83&5.5&5.38&0.24&0.39\\\hline
+11&10.06&5.72&5.15&10.05&5.63&5.1&0.27&0.59\\\hline
+12&12.23&7.13&5.12&12.09&7&5.16&0.33&0.61\\\hline
+13&13.87&6.4&3.39&13.95&6.39&3.32&0.29&0.67\\\hline
+14&8.54&5.32&4.08&8.58&5.34&4.16&0.2&0.5\\\hline
+15&8.46&6.15&4.79&8.56&6.18&4.84&0.23&0.44\\\hline
+16&10.19&9.76&10.06&9.99&9.63&10.09&0.16&0.19\\\hline
+17&8.54&6.78&6.41&8.55&6.78&6.61&0.08&0.27\\\hline
+18&7.67&5&4.09&7.8&5.05&4.03&0.25&0.51\\\hline
+19&6.21&4.72&4.21&6.1&4.64&4.19&0.24&0.42\\\hline
+20&7.02&6.27&6.34&7.05&6.26&6.33&0.22&0.31\\\hline
+21&8.07&6.41&5.48&7.88&6.29&5.71&0.23&0.39\\\hline
+22&6.18&6.04&5.94&6.2&6.04&5.99&0.07&0.09\\\hline
+23&5.5&4.73&5.16&5.73&4.97&5.21&0.3&0.39\\\hline
+24&6.93&5.65&5.51&6.88&5.68&5.43&0.24&0.38\\\hline
+25&6.52&6.03&5.77&6.7&6.26&5.82&0.04&0.12\\\hline
+26&7.46&5.59&4.69&7.48&5.67&4.68&0.21&0.41\\\hline
+27&7.57&7.56&7.25&7.87&7.85&7.29&0.05&0.05\\\hline
+28&13.56&13.01&12.2&13.55&13.02&12.34&0.02&0.06\\\hline
+29&13.09&11.1&8.66&13.06&11&8.75&0.12&0.26\\\hline
+\end{tabular}
+\caption{$r^2$, training and test error for Linear (L), Nonlinear (NL), and Nonparametric (NP) models.}
+\label{resultstable}
+\end{table}
+
+
 \section{Parametric Analysis}
+In this section we apply parametric methods to the traffic dataset. All of the numeric results from this section and the next are collected in Table \ref{resultstable}.
+\subsection{Density Estimation}
+Perhaps the simplest parametric assumption that we can make about the underlying distribution of the data is that the distribution is normal. If this is the case we can obtain a density estimate by simply taking the sample mean and variance.
+
+To examine the applicability of the normal hypothesis we constructed QQ plots for each region. 
+
+
+TODO
+
+%As outlined above, we are interested in modelling the distribution of traffic speeds in the city of Chicago by region. To perform a parametric estimate of the density we must first decide on a model that we believe the speeds follow, and then we can calculate maximum likelihood parameters to produce a viable model.
+
+%To begin with we assumed that traffic speed followed a normal distribution. [Why would we believe this?]. Using this model it is relatively easy to calculate the maximum likelihood values for the mean and standard deviation. Computing this over the 29 regions gives the data found in columns 1 and 2 of Table \ref{•}.
+
+%In addition to simply computing the distribution, we can examine how well this distribution fits the actual data graphically and numerically. To examine the applicability of our model graphically we created QQ plots. Several of these plots look relatively close to linear, indicating that the underlying distributions are close to normal. However, there are also several plots which exhibit strong non linearity; this indicates that the normal distribution model may not be entirely accurate for all of the regions in question.
+
+%In an attempt at a parametric estimate of the density we first made the assumption that the data was normally distributed. Under this assumption we could fit a density by simply calculating the sample mean and standard deviation and using these to create density estimates. 
+
+%To asses the accuracy of our normality assumptions we produced QQ plots for each region. A cursory inspection of each individual region seems to show that the normality assumption is not a very accurate one for this data set. [Insert some images here]. We quantify this later with a KS test.
+%[I need some justification for this]
+\subsection{Regression Analysis}
+Having examined the parametric density estimates we can now turn to the second goal for this paper: creating accurate models around for traffic speed. To create a parametric model we tried two different classes of  models: linear models which make the assumption that the response is linear in terms of the input and cubic models which assume the response is cubic. We chose to form linear models as a baseline for our models: if the other models couldn't significantly outperform a linear model then they were clearly not worthwhile. We also formed cubic models because we recognized that the data was clearly nonlinear in most variables; we settled on cubic models after visual inspection indicated that generally the data was not excessively wobbly and in order to reduce the effects of over fitting.
+
+In both the linear and the cubic cases we first partitioned the data into training and test sets. the test set was a 25\% random sample of the whole data and the training set was the remaining segment. To make sure runs were reproducible we added the ability to seed the random number generator to ensure that test/training sets would be consistent across runs if needed. 
+
+After we had partitioned the data we performed model selection using Akaike information criterion (AIC). Due to time and computation constraints we were unable to examine all possible models; instead we hand selected a set of models that we expected to fit the data well. We then trained each of these models on the training set and chose the model with the lowest AIC. Finally we ran the best model against the test set and computed the testing error. Reported above in Table \ref{resultstable} we include the training error, test error, and computed $r^2$ for the best linear and cubic models. 
+\section{Nonparametric Analysis}
+In this section we relaxed the assumptions made above and performed non parametric analysis on the traffic data set. Once again, the results are all summarized in Table \ref{resultstable}.
+\subsection{Density Estimation}
+To begin with we wanted to asses the accuracy of the normal density created above, but we were unable to go beyond a simple QQ plot. Once we enter the realm of nonparametric statistics we can quantify this by performing a KS test against the predicted value. The following table gives the predicted KS values.
+
+Having seen the failings of the normal density estimate, we can attempt to create a better density estimate using a kernel density estimate. These were created and we produced 95\% confidence bands.
+\subsection{Regression Analysis}
+In an attempt to improve on the parametric models we wanted to fit a nonparametric model to the data. To do this we chose to model the data using a higher dimensional local linear regression. This model makes very weak assumptions about the underlying function (depending upon the desired convergence rate either that it is Lipschitz Continuous or that it has two bounded derivatives). Originally we were considering using a Generalized Additive Model (GAM) since local linear regressions begin to degrade in higher dimensions. However, several of the models that we wanted to experiment with involved interaction terms which GAMs explicitly disallow. As such, we decided to stick with a local linear regression, despite the curse of dimensionality.
+
+Our methodology for generating a local linear model was very similar to our methodology in the parametric case: we partitioned the data set, did model selection using AIC, and computed the training/test error. The one addition is that we implemented cross validation for selecting the optimal bandwidth. This cross validation was used in both model selection and final computations. During model selection, we chose the bandwidth that produced the minimum leave one out cross validation score and used the AIC value for this fit (we could have used leave one out cross validation instead of AIC during model selection, but we wanted to keep it consistent with our parametric analysis, and the two are asymptotically equivalent). Table \ref{resultstable} contains the test and training error for the optimal fit for each region.
+\section{Discussion}
+\subsection{Density Estimation}
+In this case it seems that the assuming a normal distribution was quite a mistake. 
+\subsection{Regression Analysis}
+Nonlinear does pretty well, and the local linear regression does ok as well. And some other conclusions.
+\section{Biblography}
+\begin{thebibliography}{9}
+
+\bibitem{costoftraffic}
+  \url{http://www.cebr.com/reports/the-future-economic-and-environmental-costs-of-gridlock/}
+
+\bibitem{regiondataset}
+  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
+  
+\bibitem{segmentdataset}
+  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/77hq-huss}
+
+\bibitem{bullsdata}
+  \url{http://www.landofbasketball.com/results/2010_2011_scores_full.htm}
+
+\bibitem{cubsdata}
+  \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
+
+\bibitem{bearsdata}
+  \url{http://www.repole.com/sun4cast/data.html#dataprior}
+	
+\bibitem{whitesoxdata}
+  \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
+
+\bibitem{blackhawksdata}
+  \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
+  
+\bibitem{trafficapp}
+  \url{chicago-traffic.mooo.com}
+
+\end{thebibliography}
+\end{document}
+
+
+
+
 \begin{table}
 \begin{tabular}{|l|l|l|}
 \hline
@@ -71,63 +194,3 @@ Region ID & $\mu$ & $\sigma$\\\hline
 29 & 23.721448 $\pm$ 0.030303 & 3.865192\\\hline
 \end{tabular}
 \end{table}
-\subsection{Density Estimation}
-As outlined above, we are interested in modelling the distribution of traffic speeds in the city of Chicago by region. To perform a parametric estimate of the density we must first decide on a model that we believe the speeds follow, and then we can calculate maximum likelihood parameters to produce a viable model.
-
-To begin with we assumed that traffic speed followed a normal distribution. [Why would we believe this?]. Using this model it is relatively easy to calculate the maximum likelihood values for the mean and standard deviation. Computing this over the 29 regions gives the data found in columns 1 and 2 of Table \ref{•}.
-
-In addition to simply computing the distribution, we can examine how well this distribution fits the actual data graphically and numerically. To examine the applicability of our model graphically we created QQ plots. Several of these plots look relatively close to linear, indicating that the underlying distributions are close to normal. However, there are also several plots which exhibit strong non linearity; this indicates that the normal distribution model may not be entirely accurate for all of the regions in question.
-
-%In an attempt at a parametric estimate of the density we first made the assumption that the data was normally distributed. Under this assumption we could fit a density by simply calculating the sample mean and standard deviation and using these to create density estimates. 
-
-%To asses the accuracy of our normality assumptions we produced QQ plots for each region. A cursory inspection of each individual region seems to show that the normality assumption is not a very accurate one for this data set. [Insert some images here]. We quantify this later with a KS test.
-%[I need some justification for this]
-\subsection{Regression Analysis}
-The second goal we have outlined above is to produce a viable model of traffic using time and sports games as parameters. We chose to take two different parametric approaches to this problem: a simple linear regression, and a higher order cubic regression.
-\subsubsection{Linear Regression}
-Linear regressions are the gold standard for an initial shot at predicting a model from input. This model assumes that the data is a linear function of the independent variables.  In our analysis we trained several different linear models and chose the one that had the lowest testing error of any linear model. We then used this model to build a fit for the entire data set.
-
-
-Having looked at the density of traffic speeds we then turned our investigation to modelling traffic speed as a function of time and sports games. We tried two different classes of regressions for each region: a simple linear model and a polynomial model. A number of different models were tried and the one with the lowest test error was ultimately chosen as the winning model. We present the MSE on the testing data produced by both the linear model and the polynomial model, along with the winning model. We report below the MSE produced by the best model on the entire training data set, the $r^2$, and the model that produced this fit.
-\section{Nonparametric Analysis}
-\subsection{Density Estimation}
-To begin with we wanted to asses the accuracy of the normal density created above, but we were unable to go beyond a simple QQ plot. Once we enter the realm of nonparametric statistics we can quantify this by performing a KS test against the predicted value. The following table gives the predicted KS values.
-
-Having seen the failings of the normal density estimate, we can attempt to create a better density estimate using a kernel density estimate. These were created and we produced 95\% confidence bands.
-\subsection{Regression Analysis}
-To try to improve upon the regressions produced by the parametric models, we can try to produce a local linear regression. These have been produced and we looked at some stuff.
-\section{Discussion}
-\subsection{Density Estimation}
-In this case it seems that the assuming a normal distribution was quite a mistake. 
-\subsection{Regression Analysis}
-Nonlinear does pretty well, and the local linear regression does ok as well. And some other conclusions.
-\section{Biblography}
-\begin{thebibliography}{9}
-
-\bibitem{costoftraffic}
-  \url{http://www.cebr.com/reports/the-future-economic-and-environmental-costs-of-gridlock/}
-
-\bibitem{regiondataset}
-  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
-  
-\bibitem{segmentdataset}
-  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/77hq-huss}
-
-\bibitem{bullsdata}
-  \url{http://www.landofbasketball.com/results/2010_2011_scores_full.htm}
-
-\bibitem{cubsdata}
-  \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
-
-\bibitem{bearsdata}
-  \url{http://www.repole.com/sun4cast/data.html#dataprior}
-	
-\bibitem{whitesoxdata}
-  \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
-
-\bibitem{blackhawksdata}
-  \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
-
-\end{thebibliography}
-\end{multicols*}
-\end{document}

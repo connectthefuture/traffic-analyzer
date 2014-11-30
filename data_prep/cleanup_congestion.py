@@ -29,7 +29,7 @@ def region_test(row):
     Says if a specific row is valid.
     """
 
-    return row[-2] != "0" and float(row[-1]) < 40 and float(row[-1]) > 0
+    return row[-2] != "0" and float(row[-1]) < 60 and float(row[-1]) > 0
 
 def segment_test(row):
     """
