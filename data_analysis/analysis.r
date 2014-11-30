@@ -31,11 +31,11 @@ parametric_density_estimation <- function (dat, alpha = 0.05,
   #    save_prefix: A prefix to be prepended to all plots saved by this function.
   n = length(dat$speed)
   mu = mean(dat$speed)
-  sigma = sd(dat$speed)
-  mu_error = qnorm(1 - alpha / 2) * sigma / sqrt(n)
-  
+  sigma2 = var(dat$speed)
+  mu_error = qnorm(1 - alpha / 2) * sqrt(sigma2) / sqrt(n)
+  sigma2_error = 2 * sigma2^2 / (n - 1)
   # print the results
-  print(sprintf("%f %f %f", mu, mu_error, sigma))
+  print(sprintf("%.2f $\\pm$ %.2E, %.2f $\\pm$ %.2E", mu, mu_error, sigma2, sigma2_error))
   
   # Plotting
   if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-qqplot', sep=''))}
@@ -230,7 +230,6 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   
   # First we select a model
   model = select_model_nonparametric(all_models, train_data, test_percent)
-  model = speed ~ .
   # Determine bandwidth
   #alpha = run_cross_validation(model, dat, seq(0.1))
   alpha = 0.1
@@ -257,16 +256,16 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
 
 run_analysis <- function(data_set, save_plots = FALSE, save_prefix = '') {
   # This function will essentially call all the other functions in this file.
-  #parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
-  parametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  #parametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
   #nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
-  nonparametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  #nonparametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
 }
 
 for (region_id in 1:29) {
-  print(sprintf("Running analysis for %d", region_id))
+  #print(sprintf("Running analysis for %d", region_id))
   run_analysis(region_data[region_data$id == region_id,], TRUE, toString(region_id))
 }
 
 #### FOR TESTING ####
-current_data = region_data[region_data$id == 13,]
+current_data = region_data[region_data$id == 4,]

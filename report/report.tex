@@ -3,7 +3,7 @@
 \date{\today}
 
 \documentclass[12pt]{article}
-%\usepackage{multicol}
+\usepackage{multicol}
 %\twocolumn
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -12,9 +12,13 @@
 \usepackage{float}
 \usepackage[caption = false]{subfig}
 \usepackage{hyperref}
-  
+\usepackage{lscape}
+\usepackage{wrapfig}
+\usepackage[margin=0.5in]{geometry}
+
 \begin{document}
 \maketitle
+%\begin{multicols}{2}
 \section{Introduction}
 Everybody hates traffic. Some studies have show that traffic ends up costing Americans over 120 billion dollars a year \cite{costoftraffic}. However, before trying to address the problem of traffic it is imperative that we form accurate statistical models of traffic flow and the variables that affect it. In this paper, we perform both a parametric and nonparametric analysis of traffic in the city of Chicago.
 \subsection{Goals}
@@ -30,99 +34,61 @@ The second data set of interest was a collection of all sports games that have h
 \subsection{Data Preprocessing}
 Once the above datasets were gathered they were combine into a single data set that contained all of the information we wanted. Each timestamp was broken down into year, month, day, hour, minute, day of week, and a flag indicating if it was a weekend or not. In addition a day label was added that indexed the days sequentially. Finally we added a column that was true if there was any sports game on a day and false otherwise. Once all of this preliminary processing was done, we cleaned up the data set by removing any data points that had invalid speeds (either caused by having 0 bus reads or by having a speed over 40 mph when most roads have a speed limit of 30 mph). 
 \subsection{Preliminary Exploration and Visualization}
+
 Having discussed the data that we examined we will now provide several visualizations to give the reader a better sense of the data set. First, Figure \ref{speedvshour13} shows the speed as a function of hour in region 13 (Down town Chicago Loop); the drop in during the day, especially around 5 PM should make intutive sense to anybody who has worked in down town Chicago. We have also constructed a lightewight web application to interact with the results of this analysis \cite{trafficapp}; Figure \ref{appscreenshot} shows a screen shot of this application to illustrate the regions of interest and average traffic patters at 5 PM. Finally, Figure \ref{region11games} illustrates the average speed in Region 11 (containing the United Center) when there was no sports game (red Xs) and when there was a Bulls or Blackhawks game (black Os). Most noticeably there is a significant dip in the later evening that seems to be the result of the game.
-\begin{figure}[ht!]
-\includegraphics[width=\linewidth]{../plots/speedvshour13}
+
+\begin{figure}[!ht]
+%\begin{wrapfigure}{L}{0.5\linewidth}
+\centering
+\includegraphics[width=0.5\linewidth]{../plots/speedvshour13}
 \caption{Speed vs Hour in Region 13}
 \label{speedvshour13}
 \end{figure}
-\begin{figure}[ht!]
-\includegraphics[width=\linewidth]{../plots/region11games}
+%\end{wrapfigure}
+
+%\begin{wrapfigure}{L}{0.5\linewidth}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.5\linewidth]{../plots/region11games}
 \caption{Speed vs Hour in Region 11 with and without sports games}
 \label{region11games}
+%\end{wrapfigure}
 \end{figure}
-
-
-\begin{table}
-\begin{tabular}{|l|l|l|l|l|l|l|l|l|}
-\hline
-ID & L Train & NL Train & NP Train & L Test & NL Test & NP Test & L $r^2$ & NL $r^2$\\\hline
-1&6.3&4.35&4.81&6.17&4.37&4.86&0.27&0.49\\\hline
-2&6.5&6.23&5.68&6.59&6.31&5.76&0.05&0.09\\\hline
-3&8.61&5.36&4.86&8.67&5.51&4.97&0.28&0.55\\\hline
-4&7.96&4.67&4.51&7.87&4.64&4.32&0.32&0.6\\\hline
-5&7.13&4.77&4.53&7&4.59&4.5&0.24&0.49\\\hline
-6&8.29&5.46&4.97&8.35&5.5&4.99&0.28&0.53\\\hline
-7&7.31&4.61&4.61&7.37&4.68&4.58&0.27&0.54\\\hline
-8&8.61&5.31&4.28&8.68&5.43&4.32&0.32&0.58\\\hline
-9&7.18&4.97&5.06&7.03&4.96&5.24&0.19&0.44\\\hline
-10&6.86&5.49&5.54&6.83&5.5&5.38&0.24&0.39\\\hline
-11&10.06&5.72&5.15&10.05&5.63&5.1&0.27&0.59\\\hline
-12&12.23&7.13&5.12&12.09&7&5.16&0.33&0.61\\\hline
-13&13.87&6.4&3.39&13.95&6.39&3.32&0.29&0.67\\\hline
-14&8.54&5.32&4.08&8.58&5.34&4.16&0.2&0.5\\\hline
-15&8.46&6.15&4.79&8.56&6.18&4.84&0.23&0.44\\\hline
-16&10.19&9.76&10.06&9.99&9.63&10.09&0.16&0.19\\\hline
-17&8.54&6.78&6.41&8.55&6.78&6.61&0.08&0.27\\\hline
-18&7.67&5&4.09&7.8&5.05&4.03&0.25&0.51\\\hline
-19&6.21&4.72&4.21&6.1&4.64&4.19&0.24&0.42\\\hline
-20&7.02&6.27&6.34&7.05&6.26&6.33&0.22&0.31\\\hline
-21&8.07&6.41&5.48&7.88&6.29&5.71&0.23&0.39\\\hline
-22&6.18&6.04&5.94&6.2&6.04&5.99&0.07&0.09\\\hline
-23&5.5&4.73&5.16&5.73&4.97&5.21&0.3&0.39\\\hline
-24&6.93&5.65&5.51&6.88&5.68&5.43&0.24&0.38\\\hline
-25&6.52&6.03&5.77&6.7&6.26&5.82&0.04&0.12\\\hline
-26&7.46&5.59&4.69&7.48&5.67&4.68&0.21&0.41\\\hline
-27&7.57&7.56&7.25&7.87&7.85&7.29&0.05&0.05\\\hline
-28&13.56&13.01&12.2&13.55&13.02&12.34&0.02&0.06\\\hline
-29&13.09&11.1&8.66&13.06&11&8.75&0.12&0.26\\\hline
-\end{tabular}
-\caption{$r^2$, training and test error for Linear (L), Nonlinear (NL), and Nonparametric (NP) models.}
-\label{resultstable}
-\end{table}
-
 
 \section{Parametric Analysis}
 In this section we apply parametric methods to the traffic dataset. All of the numeric results from this section and the next are collected in Table \ref{resultstable}.
 \subsection{Density Estimation}
-Perhaps the simplest parametric assumption that we can make about the underlying distribution of the data is that the distribution is normal. If this is the case we can obtain a density estimate by simply taking the sample mean and variance.
+To perform a parametric density estimate we necessarily must make some assumptions about the underlying distribution. In our analysis we assumed that the data would be distributed normally. Under this assumption we could simply fit a distribution by taking the sample mean and sample standard deviation. These numbers are included in Table \ref{resultstable} with 95\% confidence intervals for both.
 
-To examine the applicability of the normal hypothesis we constructed QQ plots for each region. 
-
-
-TODO
-
-%As outlined above, we are interested in modelling the distribution of traffic speeds in the city of Chicago by region. To perform a parametric estimate of the density we must first decide on a model that we believe the speeds follow, and then we can calculate maximum likelihood parameters to produce a viable model.
-
-%To begin with we assumed that traffic speed followed a normal distribution. [Why would we believe this?]. Using this model it is relatively easy to calculate the maximum likelihood values for the mean and standard deviation. Computing this over the 29 regions gives the data found in columns 1 and 2 of Table \ref{•}.
-
-%In addition to simply computing the distribution, we can examine how well this distribution fits the actual data graphically and numerically. To examine the applicability of our model graphically we created QQ plots. Several of these plots look relatively close to linear, indicating that the underlying distributions are close to normal. However, there are also several plots which exhibit strong non linearity; this indicates that the normal distribution model may not be entirely accurate for all of the regions in question.
-
-%In an attempt at a parametric estimate of the density we first made the assumption that the data was normally distributed. Under this assumption we could fit a density by simply calculating the sample mean and standard deviation and using these to create density estimates. 
-
-%To asses the accuracy of our normality assumptions we produced QQ plots for each region. A cursory inspection of each individual region seems to show that the normality assumption is not a very accurate one for this data set. [Insert some images here]. We quantify this later with a KS test.
-%[I need some justification for this]
+In addition to computing the above distributions, we generated QQ plots to examine how well the data actually conformed to the normality assumptions. Many of these plots exhibited significant non linearity (indicating departure from normality), but we were unable to match the behaviour to any known distribution. As such, we chose to stay with the assumption of normality, even though the fits produced were suboptimal.
 \subsection{Regression Analysis}
 Having examined the parametric density estimates we can now turn to the second goal for this paper: creating accurate models around for traffic speed. To create a parametric model we tried two different classes of  models: linear models which make the assumption that the response is linear in terms of the input and cubic models which assume the response is cubic. We chose to form linear models as a baseline for our models: if the other models couldn't significantly outperform a linear model then they were clearly not worthwhile. We also formed cubic models because we recognized that the data was clearly nonlinear in most variables; we settled on cubic models after visual inspection indicated that generally the data was not excessively wobbly and in order to reduce the effects of over fitting.
 
-In both the linear and the cubic cases we first partitioned the data into training and test sets. the test set was a 25\% random sample of the whole data and the training set was the remaining segment. To make sure runs were reproducible we added the ability to seed the random number generator to ensure that test/training sets would be consistent across runs if needed. 
+In both the linear and the cubic cases we first partitioned the data into training and test sets. the test set was a 25\% random sample of the whole data and the training set was the remaining segment. To make sure runs were reproducible we added the ability to seed the random number generator to ensure that test/training sets would be consistent across runs if needed. arning: Wrapping figures in LaTex will require a lot of manual adjustment of your document. There are several packages available for the task, but none of them works perfectly. Before you make the choice of including figures with text wrapping in your document, make sure you have considered all the options. For example, you could use a layout with two columns for your documents and have no text-wrapping at all.
 
 After we had partitioned the data we performed model selection using Akaike information criterion (AIC). Due to time and computation constraints we were unable to examine all possible models; instead we hand selected a set of models that we expected to fit the data well. We then trained each of these models on the training set and chose the model with the lowest AIC. Finally we ran the best model against the test set and computed the testing error. Reported above in Table \ref{resultstable} we include the training error, test error, and computed $r^2$ for the best linear and cubic models. 
 \section{Nonparametric Analysis}
 In this section we relaxed the assumptions made above and performed non parametric analysis on the traffic data set. Once again, the results are all summarized in Table \ref{resultstable}.
 \subsection{Density Estimation}
-To begin with we wanted to asses the accuracy of the normal density created above, but we were unable to go beyond a simple QQ plot. Once we enter the realm of nonparametric statistics we can quantify this by performing a KS test against the predicted value. The following table gives the predicted KS values.
-
-Having seen the failings of the normal density estimate, we can attempt to create a better density estimate using a kernel density estimate. These were created and we produced 95\% confidence bands.
+We saw above that a parametric density estimate proved to be a poor tool for estimating the speed data. After this we attempted to perform a nonparametric density estimate using a kernel density estimator (KDE). We trained a KDE on each region and computed 95\% confidence bands.
 \subsection{Regression Analysis}
 In an attempt to improve on the parametric models we wanted to fit a nonparametric model to the data. To do this we chose to model the data using a higher dimensional local linear regression. This model makes very weak assumptions about the underlying function (depending upon the desired convergence rate either that it is Lipschitz Continuous or that it has two bounded derivatives). Originally we were considering using a Generalized Additive Model (GAM) since local linear regressions begin to degrade in higher dimensions. However, several of the models that we wanted to experiment with involved interaction terms which GAMs explicitly disallow. As such, we decided to stick with a local linear regression, despite the curse of dimensionality.
 
 Our methodology for generating a local linear model was very similar to our methodology in the parametric case: we partitioned the data set, did model selection using AIC, and computed the training/test error. The one addition is that we implemented cross validation for selecting the optimal bandwidth. This cross validation was used in both model selection and final computations. During model selection, we chose the bandwidth that produced the minimum leave one out cross validation score and used the AIC value for this fit (we could have used leave one out cross validation instead of AIC during model selection, but we wanted to keep it consistent with our parametric analysis, and the two are asymptotically equivalent). Table \ref{resultstable} contains the test and training error for the optimal fit for each region.
 \section{Discussion}
 \subsection{Density Estimation}
-In this case it seems that the assuming a normal distribution was quite a mistake. 
+If we compare the parametric and nonparametric density estimates it should be clear that the parametric estimate is clearly insufficient for this purpose. Not only are the tails too thin for the normal distribution, it often covers up interesting behaviour such as the flat bump in region 13. 
 \subsection{Regression Analysis}
-Nonlinear does pretty well, and the local linear regression does ok as well. And some other conclusions.
+Looking at the results from both parametric and non parametric analysis it seems that there were two broad categories of regions: one group of regions was fit relatively well by the simple models in this paper (generally leading to a $r^2$ between .4 and 0.5 for a non linear model), and the other group on which the models failed miserably. Most of the regions fell into the first group, but regions 2, 16, 17, 22, 25, 27, 28, and 29 all fell in the second group, all of the regions except region 16, in the second group fall on the geographic periphery of the measurements. [ some conclusion here]. 
+
+Region 16 is interesting because it is near the center of Chicago and so one might expect it to have a good fit. However, if we look at the speed vs hour in region 16, we can see that it has almost no hourly variation and that the distribution is significantly shifted to the right. From this we might conclude that speeds in 16 are primarily influenced by buses travelling along Lake Shore Drive, and that the factors that we have examined here are more suited for smaller streets.
+
+It is almost universally true that the cubic models outperformed the linear models. This is to be expected since cubic models are a superset of linear models. The effectiveness of the nonparametric models is more complicated. In regions near the Loop (12, 13, 14, 15) the nonparametric model significantly outperformed the cubic model on both the test and the train data. However, in other regions the non parametric model performed at about the same level, or slightly worse than the cubic models. This could be indicative of the fact that traffic patterns are more complex in metropolitan areas.
+\subsection{Future Work}
+In this analysis we chose a relatively small subset of factors that we believed would impact traffic speed (time factors and sports games). However, it has become apparent that these factors are not sufficient to fully capture the variability of traffic speeds. The next step would be to expand the number of factors that are included in the analysis; possible factors could include weather (temperature, precipitation, etc.), gas prices, etc. Additionally the data set that we worked with contained only two years of data; a more exp
+TODOansive data set would allow us to better analyze long term trends and factors (population, unemployment, etc.). 
+
+The analyses above was carried out ignoring the timeseries nature of the data. Another possible project would be to apply methods that take into account the fact that there is a time based dependence in the data.
 \section{Biblography}
 \begin{thebibliography}{9}
 
@@ -154,43 +120,47 @@ Nonlinear does pretty well, and the local linear regression does ok as well. And
   \url{chicago-traffic.mooo.com}
 
 \end{thebibliography}
-\end{document}
-
-
-
-
+%\end{multicols}
+\begin{landscape}
 \begin{table}
-\begin{tabular}{|l|l|l|}
+\small
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|}
 \hline
-Region ID & $\mu$ & $\sigma$\\\hline
-1 & 24.697801 $\pm$ 0.022228 & 2.931518\\\hline
-2 & 28.991722 $\pm$ 0.019415 & 2.614829\\\hline
-3 & 24.967138 $\pm$ 0.024994 & 3.448271\\\hline
-4 & 23.052651 $\pm$ 0.025400 & 3.429280\\\hline
-5 & 25.890058 $\pm$ 0.023019 & 3.058450\\\hline
-6 & 24.246442 $\pm$ 0.024921 & 3.393697\\\hline
-7 & 23.805981 $\pm$ 0.023463 & 3.155498\\\hline
-8 & 22.587990 $\pm$ 0.025805 & 3.578877\\\hline
-9 & 25.737242 $\pm$ 0.022743 & 2.969804\\\hline
-10 & 24.507356 $\pm$ 0.021532 & 2.999743\\\hline
-11 & 24.226650 $\pm$ 0.026715 & 3.716619\\\hline
-12 & 20.780952 $\pm$ 0.031236 & 4.281174\\\hline
-13 & 19.058748 $\pm$ 0.031712 & 4.419897\\\hline
-14 & 26.446459 $\pm$ 0.024094 & 3.272564\\\hline
-15 & 27.356264 $\pm$ 0.024014 & 3.307650\\\hline
-16 & 28.148639 $\pm$ 0.027105 & 3.469245\\\hline
-17 & 30.015234 $\pm$ 0.024633 & 3.053233\\\hline
-18 & 27.013029 $\pm$ 0.023081 & 3.201800\\\hline
-19 & 26.337392 $\pm$ 0.020474 & 2.850558\\\hline
-20 & 27.081739 $\pm$ 0.022002 & 3.003730\\\hline
-21 & 26.525628 $\pm$ 0.023895 & 3.221976\\\hline
-22 & 30.250759 $\pm$ 0.019234 & 2.580613\\\hline
-23 & 24.408021 $\pm$ 0.020131 & 2.806418\\\hline
-24 & 26.036382 $\pm$ 0.022289 & 3.019421\\\hline
-25 & 31.352320 $\pm$ 0.020673 & 2.620213\\\hline
-26 & 29.973643 $\pm$ 0.022522 & 3.063198\\\hline
-27 & 30.945219 $\pm$ 0.021275 & 2.845948\\\hline
-28 & 33.359715 $\pm$ 0.036218 & 3.719515\\\hline
-29 & 23.721448 $\pm$ 0.030303 & 3.865192\\\hline
+ID & $\mu$ & $\sigma^2$ & L Train & NL Train & NP Train & L Test & NL Test & NP Test & L $r^2$ & NL $r^2$\\\hline
+1&24.70 $\pm$ 2.23E-02& 8.65 $\pm$ 2.24E-03&6.32&4.42&4.86&6.37&4.38&4.92&0.27&0.49\\\hline
+2&29.02 $\pm$ 2.01E-02& 7.31 $\pm$ 1.53E-03&6.93&6.67&6.14&7.09&6.87&6.32&0.05&0.08\\\hline
+3&24.97 $\pm$ 2.51E-02& 12.04 $\pm$ 3.96E-03&8.76&5.52&5.04&8.78&5.49&4.84&0.27&0.54\\\hline
+4&23.06 $\pm$ 2.54E-02& 11.79 $\pm$ 3.97E-03&7.99&4.72&4.5&7.99&4.72&4.51&0.32&0.6\\\hline
+5&25.90 $\pm$ 2.31E-02& 9.40 $\pm$ 2.60E-03&7.13&4.74&4.54&7.13&4.77&4.58&0.24&0.49\\\hline
+6&24.29 $\pm$ 2.62E-02& 12.73 $\pm$ 4.54E-03&9.31&6.37&5.78&9.65&6.61&5.8&0.26&0.5\\\hline
+7&23.83 $\pm$ 2.42E-02& 10.60 $\pm$ 3.23E-03&7.78&5.04&5.02&8.05&5.26&5.04&0.26&0.52\\\hline
+8&22.66 $\pm$ 2.74E-02& 14.44 $\pm$ 5.63E-03&9.98&6.56&5.29&9.77&6.35&5.33&0.31&0.55\\\hline
+9&25.76 $\pm$ 2.32E-02& 9.21 $\pm$ 2.59E-03&7.46&5.22&5.32&7.56&5.33&5.4&0.19&0.43\\\hline
+10&24.52 $\pm$ 2.17E-02& 9.12 $\pm$ 2.23E-03&6.88&5.5&5.6&7.05&5.74&5.47&0.24&0.39\\\hline
+11&24.29 $\pm$ 2.80E-02& 15.23 $\pm$ 6.23E-03&11.34&6.8&6&11.27&6.75&6.27&0.26&0.55\\\hline
+12&20.78 $\pm$ 3.13E-02& 18.45 $\pm$ 9.43E-03&12.35&7.21&5.22&12.23&7.14&5.28&0.33&0.61\\\hline
+13&19.07 $\pm$ 3.19E-02& 19.72 $\pm$ 1.04E-02&14&6.46&3.48&14.19&6.76&3.5&0.29&0.67\\\hline
+14&26.58 $\pm$ 2.66E-02& 13.19 $\pm$ 4.88E-03&10.56&6.96&5.16&10.52&6.95&5.29&0.2&0.47\\\hline
+15&27.51 $\pm$ 2.69E-02& 13.84 $\pm$ 5.21E-03&10.89&8.26&6.42&10.9&8.28&6.38&0.21&0.4\\\hline
+16&29.11 $\pm$ 4.09E-02& 28.97 $\pm$ 2.53E-02&23.62&22.17&23.04&23.59&21.98&22.55&0.18&0.23\\\hline
+17&31.36 $\pm$ 4.61E-02& 35.10 $\pm$ 3.89E-02&32.24&24.12&20.98&33.14&24.65&20.96&0.07&0.31\\\hline
+18&27.04 $\pm$ 2.36E-02& 10.78 $\pm$ 3.14E-03&8.13&5.39&4.37&8.25&5.43&4.38&0.24&0.5\\\hline
+19&26.34 $\pm$ 2.06E-02& 8.23 $\pm$ 1.82E-03&6.26&4.77&4.26&6.29&4.8&4.26&0.24&0.42\\\hline
+20&27.55 $\pm$ 3.19E-02& 19.41 $\pm$ 1.03E-02&15.05&13.74&13.69&15.59&14.27&13.33&0.22&0.28\\\hline
+21&26.53 $\pm$ 2.42E-02& 10.66 $\pm$ 3.25E-03&8.26&6.57&5.78&8.24&6.68&5.57&0.22&0.38\\\hline
+22&30.31 $\pm$ 2.02E-02& 7.42 $\pm$ 1.58E-03&6.86&6.68&6.46&6.79&6.62&6.74&0.08&0.1\\\hline
+23&24.41 $\pm$ 2.02E-02& 7.92 $\pm$ 1.68E-03&5.6&4.84&5.22&5.57&4.81&5.14&0.29&0.39\\\hline
+24&26.04 $\pm$ 2.24E-02& 9.21 $\pm$ 2.41E-03&6.98&5.72&5.55&7&5.7&5.5&0.24&0.38\\\hline
+25&31.40 $\pm$ 2.15E-02& 7.46 $\pm$ 1.79E-03&7.12&6.59&6
+TODO.32&7.04&6.55&6.29&0.04&0.11\\\hline
+26&30.33 $\pm$ 2.85E-02& 15.32 $\pm$ 6.46E-03&12.44&9.9&8.05&12.2&9.72&7.92&0.19&0.36\\\hline
+27&31.06 $\pm$ 2.28E-02& 9.42 $\pm$ 2.55E-03&8.81&8.8&8.36&8.97&8.96&8.64&0.06&0.06\\\hline
+28&34.94 $\pm$ 4.63E-02& 26.74 $\pm$ 2.98E-02&26.29&25.57&23.72&26.35&25.65&23.84&0.02&0.04\\\hline
+29&23.98 $\pm$ 3.49E-02& 20.02 $\pm$ 1.27E-02&16.96&14.4&11.75&16.92&14.33&11.66&0.15&0.28\\\hline
 \end{tabular}
+\caption{All numeric data captured in this paper. Includes sample mean and variance for each region as well as $r^2$, training, and test error for Linear (L), Nonlinear (NL), and Nonparametric (NP) models}
+\label{resultstable}
 \end{table}
+\end{landscape}
+
+\end{document}
