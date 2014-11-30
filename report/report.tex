@@ -4,7 +4,7 @@
 
 \documentclass[12pt]{article}
 \usepackage{multicol}
-%\twocolumn
+\twocolumn
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{bm}
@@ -38,29 +38,26 @@ Once the above datasets were gathered they were combine into a single data set t
 Having discussed the data that we examined we will now provide several visualizations to give the reader a better sense of the data set. First, Figure \ref{speedvshour13} shows the speed as a function of hour in region 13 (Down town Chicago Loop); the drop in during the day, especially around 5 PM should make intutive sense to anybody who has worked in down town Chicago. We have also constructed a lightewight web application to interact with the results of this analysis \cite{trafficapp}; Figure \ref{appscreenshot} shows a screen shot of this application to illustrate the regions of interest and average traffic patters at 5 PM. Finally, Figure \ref{region11games} illustrates the average speed in Region 11 (containing the United Center) when there was no sports game (red Xs) and when there was a Bulls or Blackhawks game (black Os). Most noticeably there is a significant dip in the later evening that seems to be the result of the game.
 
 \begin{figure}[!ht]
-%\begin{wrapfigure}{L}{0.5\linewidth}
 \centering
-\includegraphics[width=0.5\linewidth]{../plots/speedvshour13}
+\includegraphics[width=\linewidth]{../plots/speedvshour13}
 \caption{Speed vs Hour in Region 13}
 \label{speedvshour13}
 \end{figure}
-%\end{wrapfigure}
 
-%\begin{wrapfigure}{L}{0.5\linewidth}
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.5\linewidth]{../plots/region11games}
+\includegraphics[width=\linewidth]{../plots/region11games}
 \caption{Speed vs Hour in Region 11 with and without sports games}
 \label{region11games}
-%\end{wrapfigure}
 \end{figure}
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.5\linewidth]{../plots/trafficapp}
+\includegraphics[width=\linewidth]{../plots/trafficapp}
 \caption{Screen Shot of webapp showing regions and predicted traffic}
 \label{appscreenshot}
 \end{figure}
+
 \section{Parametric Analysis}
 In this section we apply parametric methods to the traffic dataset. All of the numeric results from this section and the next are collected in Table \ref{resultstable}.
 \subsection{Density Estimation}
@@ -91,8 +88,7 @@ Region 16 is interesting because it is near the center of Chicago and so one mig
 
 It is almost universally true that the cubic models outperformed the linear models. This is to be expected since cubic models are a superset of linear models. The effectiveness of the nonparametric models is more complicated. In regions near the Loop (12, 13, 14, 15) the nonparametric model significantly outperformed the cubic model on both the test and the train data. However, in other regions the non parametric model performed at about the same level, or slightly worse than the cubic models. This could be indicative of the fact that traffic patterns are more complex in metropolitan areas.
 \subsection{Future Work}
-In this analysis we chose a relatively small subset of factors that we believed would impact traffic speed (time factors and sports games). However, it has become apparent that these factors are not sufficient to fully capture the variability of traffic speeds. The next step would be to expand the number of factors that are included in the analysis; possible factors could include weather (temperature, precipitation, etc.), gas prices, etc. Additionally the data set that we worked with contained only two years of data; a more exp
-TODOansive data set would allow us to better analyze long term trends and factors (population, unemployment, etc.). 
+In this analysis we chose a relatively small subset of factors that we believed would impact traffic speed (time factors and sports games). However, it has become apparent that these factors are not sufficient to fully capture the variability of traffic speeds. The next step would be to expand the number of factors that are included in the analysis; possible factors could include weather (temperature, precipitation, etc.), gas prices, etc. Additionally the data set that we worked with contained only two years of data; a more expansive data set would allow us to better analyze long term trends and factors (population, unemployment, etc.). 
 
 The analyses above was carried out ignoring the timeseries nature of the data. Another possible project would be to apply methods that take into account the fact that there is a time based dependence in the data.
 \section{Biblography}
