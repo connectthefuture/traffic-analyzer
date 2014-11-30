@@ -4,9 +4,12 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 <title>Google Maps - pygmaps </title>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
 <script type="text/javascript">
 	var map;
+	var rectangles = [];
 	function initialize() {
 		var centerlatlng = new google.maps.LatLng(41.836900, -87.684700);
 		var myOptions = {
@@ -18,10 +21,17 @@
 	}
 
 	function calculate_color(speed) {
-		if (speed == -1) return "#000000"
+		/*if (speed == -1) return "#000000"
 		if (speed > 25) return "#00FF00"
 	  if (speed > 15) return "#FFFF00"
-		return "#FF0000"
+		return "#FF0000"*/
+		if (speed > 20) {
+			return get_gradient({red: 255, blue: 0, green: 255},
+			 										{red: 0, blue: 0, green: 255}, 20, 25, speed)
+		} else {
+			return get_gradient({red: 255, blue: 0, green: 0},
+													{red: 255, blue: 0, green: 255}, 15, 20, speed)
+		}
 	}
 
 	function add_data(region_num, data) {
@@ -59,8 +69,23 @@
 		google.maps.event.addListener(rectangle, 'click', function(event) {
     	console.log(region_num);
   	});
+
+		rectangles.push(rectangle);
 	}
 
+
+	function get_gradient(start_color, end_color, min_value, max_value, value) {
+		var diff_red = end_color.red - start_color.red;
+		var diff_green = end_color.green - start_color.green;
+		var diff_blue = end_color.blue - start_color.blue;
+
+		percent = Math.max(0, (value - min_value) / (max_value - min_value));
+		r = (diff_red * percent) + start_color.red;
+		g = (diff_green * percent) + start_color.green;
+		b = (diff_blue * percent) + start_color.blue;
+
+		return "rgb(" + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')'
+	}
 
 	function submit_data() {
 		// Get all values
@@ -88,6 +113,10 @@
 			url: "/request_data",
 			data: { time: datetime, bears: bears, bulls: bulls, whitesox: whitesox, cubs: cubs, blackhawks: blackhawks},
 			success: function(data, textStatus, jqXHR) {
+				for (i = 0; i < rectangles.length; i++) {
+					rectangles[i].setMap(null);
+				}
+				rectangles = [];
 				data = JSON.parse(data);
 				for (i = 0; i < data.length; i++) {
 					add_data(i + 1, data[i]);

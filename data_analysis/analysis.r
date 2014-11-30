@@ -58,27 +58,16 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   #    save_prefix: A prefix to be prepended to all plots saved by this function.
   
   
-  select_model = function(models, num_runs = 10) {
+  select_model = function(models, train_data, num_runs = 10) {
     # This function will test several models and choose the best model. It runs num_runs
     # times and takes the model with the lowest average error.
-    min_risk = Inf
+    min_aic = Inf
     best_model = NULL
     for (model in models) {
-      all_mses = c()
-      for (run in 1:num_runs) {
-        test_rows = sample(1:nrow(dat), nrow(dat) * test_percent, replace=FALSE)
-        test_data = dat[test_rows, ]
-        train_data = dat[-test_rows, ]
-        
-        # Fit the model
-        fit = lm(model, dat=train_data)
-        
-        # Compute MSE on the test data
-        all_mses = c(all_mses, mean((suppressWarnings(predict(fit, test_data)) - test_data$speed)^2))
-      }
-      estimated_risk = mean(all_mses)
-      if (estimated_risk < min_risk) {
-        min_risk = estimated_risk
+      fit = lm(model, train_data)
+      aic_value = AIC(fit)
+      if (aic_value < min_aic) {
+        min_aic = aic_value
         best_model = model
       }
     }
@@ -109,24 +98,33 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
                        formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + cubs),
                        formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + whitesox)
   )
-
+  
+  # Create test and train data
+  test_rows = sample(1:nrow(dat), nrow(dat) * test_percent, replace=FALSE)
+  test_data = dat[test_rows, ]
+  train_data = dat[-test_rows, ]
+  
   # Find the best linear model
-  best_linear_model = select_model(linear_models)
-  best_nonlinear_model = select_model(nonlinear_models)
+  best_linear_model = select_model(linear_models, train_data)
+  best_nonlinear_model = select_model(nonlinear_models, train_data)
   
   # Create the actual fits
-  best_linear_fit = lm(best_linear_model, dat)
-  best_nonlinear_fit = lm(best_nonlinear_model, dat)
+  best_linear_fit = lm(best_linear_model, train_data)
+  best_nonlinear_fit = lm(best_nonlinear_model, train_data)
   
   # Calculate MSE for the fits
-  linear_mse = mean(best_linear_fit$residuals ^ 2)
-  nonlinear_mse = mean(best_nonlinear_fit$residuals ^ 2)
+  linear_training_error = mean(best_linear_fit$residuals^2)
+  linear_testing_error = mean((predict(best_linear_fit, test_data) - test_data$speed)^2)
+  nonlinear_training_error = mean(best_nonlinear_fit$residuals^2)
+  nonlinear_testing_error = mean((suppressWarnings(predict(best_nonlinear_fit, test_data)) - test_data$speed)^2)
   
   # Print out everything of use
-  print(sprintf("%f %f", linear_mse, nonlinear_mse))
-  cat(deparse(best_linear_model))
-  print('')
-  cat(deparse(best_nonlinear_model))
+  print(sprintf("Linear, Training error: %f, Testing error: %f", linear_training_error, linear_testing_error))
+  print(sprintf("Nonlinear, Training error: %f, Testing error: %f", nonlinear_training_error, nonlinear_testing_error))
+  print("Best Linear model")
+  print(best_linear_model)
+  print("Best Nonlinear model")
+  print(best_nonlinear_model)
   
   # Save any models/graphs
   if (save_plots) {
@@ -162,7 +160,9 @@ run_cross_validation <- function(model, train_data, alphas) {
   best_cv = Inf
   best_alpha = NULL
   for (alpha in alphas) {
+    print(alpha)
     fit = do.call('locfit', list(formula(model), data=train_data, alpha=alpha))
+    #fit = locfit(formula(model), data=train_data, alpha = alpha)
     r = residuals(fit)
     infl = fitted(fit, what = "infl")
     cv_score = mean((r/(1-infl))^2)
@@ -175,7 +175,8 @@ run_cross_validation <- function(model, train_data, alphas) {
 }
 
 select_model_nonparametric <- function(models, dat, test_percent, num_runs = 10) {
-  # This function will select the model that produces the lowest average risk.
+  # This function will select the model that produces the lowest average risk. This 
+  # uses AIC and takes the minimum value.
   # Args:
   #   models: All models that will be tested.
   #   dat: Data that the model should be trained/tested on.
@@ -187,30 +188,11 @@ select_model_nonparametric <- function(models, dat, test_percent, num_runs = 10)
     all_mses = c()
     
     best_alpha = 0.1
-    aic_value = aic(formula(model), dat=train_data, alpha=best_alpha)
-    if (aic_value < min_aic) {
-      min_aic = aic_value
+    aic_value = aic(formula(model), dat=dat, alpha=best_alpha)
+    if (aic_value[4] < min_aic) {
+      min_aic = aic_value[4]
       best_model = model
     }
-    #for (run in 1:num_runs) {
-    #  test_rows = sample(1:nrow(dat), nrow(dat) * test_percent, replace=FALSE)
-    #  test_data <- dat[test_rows, ]
-    #  train_data <- dat[-test_rows, ]
-      
-      # Fit the model
-      #best_alpha = run_cross_validation(formula(model), train_data, seq(0.1, 1, 0.1))
-    #  best_alpha = 0.1
-      
-    #  fit = 
-      
-      # Compute MSE on the test data
-    #  all_mses = c(all_mses, mean((suppressWarnings(predict(fit, test_data)) - test_data$speed)^2))
-    #}
-    #estimated_risk = mean(all_mses)
-    #if (estimated_risk < min_risk) {
-    #  min_risk = estimated_risk
-    #  best_model = model
-    #}
   }
   return (best_model)
 }
@@ -230,27 +212,38 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
                     speed ~ hour + weekend * hour,
                     
                     # Add sports effects
-                    speed ~ hour + weekend * hour + any_game,
-                    speed ~ hour + weekend * hour + bears,
-                    speed ~ hour + weekend * hour + bulls,
-                    speed ~ hour + weekend * hour + blackhawks,
-                    speed ~ hour + weekend * hour + bulls,
-                    speed ~ hour + weekend * hour + whitesox
+                    speed ~ hour + weekend * hour + any_game * hour,
+                    speed ~ hour + weekend * hour + bears * hour,
+                    speed ~ hour + weekend * hour + bulls * hour,
+                    speed ~ hour + weekend * hour + blackhawks * hour,
+                    speed ~ hour + weekend * hour + bulls * hour ,
+                    speed ~ hour + weekend * hour + whitesox * hour
                     )
   
+  # Create test and train data
+  test_rows = sample(1:nrow(dat), nrow(dat) * test_percent, replace=FALSE)
+  test_data = dat[test_rows, ]
+  train_data = dat[-test_rows,]
+  
   # First we select a model
-  model = select_model_nonparametric(all_models, dat, test_percent)
+  model = select_model_nonparametric(all_models, train_data, test_percent)
   # Determine bandwidth
-  #alpha = run_cross_validation(model, dat, seq(0.1, 1, 0.1))
+  #alpha = run_cross_validation(model, dat, seq(0.05, 0.4, 0.05))
   alpha = 0.1
   
   # Construct the actual fit
-  fit = locfit(formula(model), data=dat, alpha=alpha)
-  # Compute the mse
-  mse = mean((predict(fit, dat) - dat$speed)^2)
-  print(model)
-  print(mse)
+  fit = locfit(formula(model), data=train_data, alpha=alpha)
   
+  # Compute the errors
+  training_error = mean((predict(fit, train_data) - train_data$speed)^2)
+  testing_error = mean((predict(fit, test_data) - test_data$speed)^2)
+  
+  print(sprintf("Nonparametric, Training error: %f, Testing error: %f", training_error, testing_error))
+  print("Best nonparametric model")
+  print(model)
+  print("Best bandwidth")
+  print(alpha)
+        
   # Save plots and models
   if (save_plots) {
     saveRDS(fit, paste(MODEL_DIR, save_prefix, '-nonparametric.RData', sep=''))

@@ -23,8 +23,6 @@ def load_region_list():
 def get_values(time, cubs, bulls, bears, whitesox, blackhawks):
     result = []
     speeds = predict_data(time, cubs, bulls, bears, whitesox, blackhawks)
-    print(speeds)
-    print("Woo!")
     for speed, region_id in speeds:
         result.append((REGIONS[region_id], speed))
     return result
@@ -49,4 +47,5 @@ def index():
 
 if __name__ == '__main__':
     load_region_list()
+    #rapper_setup()
     app.run(debug=True)
