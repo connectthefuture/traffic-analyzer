@@ -3,23 +3,30 @@
 \date{\today}
 
 \documentclass[12pt]{article}
+\usepackage{multicol}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[caption = false]{subfig}
+\usepackage{hyperref}
   
 \begin{document}
 \maketitle
+\begin{multicols*}{2}
 \section{Introduction}
-Some studies indicate that city traffic and gridlock is wasting around [xxx] dollars a year. As such it might be interesting to perform a statistical analysis of traffic data to gain a better understanding of the problem.
+Everybody hates traffic. Some studies have show that traffic ends up costing Americans over 120 billion dollars a year \cite{costoftraffic}. However, before trying to address the problem of traffic it is imperative that we form accurate statistical models of traffic flow and the variables that affect it. In this paper, we perform both a parametric and nonparametric analysis of traffic in the city of Chicago.
 \section{Description of the Data}
-There are three main data sets that will be analysed in this paper: estimates of congestion in Chicago by region, estimates of congestion in Chicago by segment, and a list of all sports games in Chicago.
+For the purposes of this paper we will be examining Chicago traffic data conjunction with data about sports games in the city. These data sets were obtained separately and then combine together.
 \subsection{Chicago Congestion}
-The estimates of congestion are divided into two categories: segment data and regional data. The segment data contains the average speed of 1250 segments measure every 10 minutes; however, the data only extends for about a month and a half. The regional data contains the average speed in 23 regions of Chicago and contains data over a three year time period from 2011 to 2013. Most of the analysis will be carried out over the regional data, simply because of the longer time period. This data was cleaned by removing invalid read values, and extremely high speeds (over 60 mph on municipal roads is very rare). The times of the measurements were broken down into year, month, day, hour, minute, day of week, and weekend. 
+The main data set of interest is a record of estimated traffic speeds in 29 regions of Chicago gathered from 03/12/2011 until 03/26/2013 \cite{regiondataset}. For the purposes of this data set the City of Chicago is partitioned into 29 regions, and each data point is the speed for a specific region at a given date and time. Speeds were calculated by sending GPS probes to CTA buses that were operating in the specific region at the given time. Measurements were taken every 10 minutes and a record was kept of the speed, in addition to the number of buses in the region and the number of valid GPS reads that were used when calculating the speed.
+
+In addition to data about regions, the City of Chicago provides more detailed data about 1250 individual segments of road \cite{segmentdataset}. Some preliminary analysis was done of this data set, but it had a much more restricted time frame (2013-1-15 - 2013-2-28) and so analysis was eventually abandoned. However, we will use this data set to try to explain some of the phenomenon observed in the region data.
 \subsection{Chicago Sports Games}
-In addition to simple time data, it was speculated that sports games would have a significant impact on congestion during game days. To measure this data was gathered on all of the sports games of the five main Chicago sports teams: the Bears (NFL), the Bulls (NBA), the White Sox (MLB), the Cubs (MLB), and the Blackhawks (NHL). This data was aggregated from a number of sources [insert sources here] and then aggregated. The only values of interest were the day of the game and whether the team won or lost. This data was then added to the congestion data described above to create the final data set.
+The second data set of interest was a collection of all sports games that have happened in Chicago during the period of interest (03/12/2011 - 03/26/2013). We predicted that sports games would have a significant impact on traffic and so would be a useful feature to add to the data set. Unfortunately, we were unable to find a single comprehensive list of all sports games in Chicago and were forced to go to individual sites. We gathered the dates of every Bulls \cite{bullsdata}, Bears \cite{bearsdata}, Whitesox \cite{whitesoxdata}, Cubs \cite{cubsdata} and Blackhawks \cite{blackhawksdata} game in the time period and created a data set where each point was a date and the games that occurred on that date.
+\subsection{Data Preprocessing}
+Once the above datasets were gathered they were combine into a single data set that contained all of the information we wanted. Each timestamp was broken down into year, month, day, hour, minute, day of week, and a flag indicating if it was a weekend or not. In addition a day label was added that indexed the days sequentially. Finally we added a column that was true if there was any sports game on a day and false otherwise. Once all of this preliminary processing was done, we cleaned up the data set by removing any data points that had invalid speeds (either caused by having 0 bus reads or by having a speed over 40 mph when most roads have a speed limit of 30 mph). 
 \subsection{Preliminary exploration and Visualization}
 In order to provide tools for visualizing and exploring the data and the models that we have constructed, we have created a web application (hosted [here]) that allows for an interactive exploration of the data overlaid on a map of Chicago.
 
@@ -94,4 +101,33 @@ To try to improve upon the regressions produced by the parametric models, we can
 In this case it seems that the assuming a normal distribution was quite a mistake. 
 \subsection{Regression Analysis}
 Nonlinear does pretty well, and the local linear regression does ok as well. And some other conclusions.
+\section{Biblography}
+\begin{thebibliography}{9}
+
+\bibitem{costoftraffic}
+  \url{http://www.cebr.com/reports/the-future-economic-and-environmental-costs-of-gridlock/}
+
+\bibitem{regiondataset}
+  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
+  
+\bibitem{segmentdataset}
+  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/77hq-huss}
+
+\bibitem{bullsdata}
+  \url{http://www.landofbasketball.com/results/2010_2011_scores_full.htm}
+
+\bibitem{cubsdata}
+  \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
+
+\bibitem{bearsdata}
+  \url{http://www.repole.com/sun4cast/data.html#dataprior}
+	
+\bibitem{whitesoxdata}
+  \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
+
+\bibitem{blackhawksdata}
+  \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
+
+\end{thebibliography}
+\end{multicols*}
 \end{document}
