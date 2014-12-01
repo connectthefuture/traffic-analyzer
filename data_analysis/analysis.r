@@ -5,10 +5,9 @@ MODEL_DIR = '../models/'
 
 # Load and prepare the data
 region_data <- read.table('../dat/augmented_region_data.csv', header=TRUE, sep=',')
-#segment_data <- read.table('../dat/augmented_segment_data.csv', header=TRUE, sep=',')
 
-# Add a little noise to the data
-region_data$speed = region_data$speed + rnorm(nrow(region_data), 0, 0.5)
+# Add a little noise to the data to remove duplicate speed
+region_data$speed = region_data$speed + rnorm(nrow(region_data), 0, 0.25)
 
 # Convert all sports games to factors
 region_data$any_game = factor(region_data$any_game)
@@ -88,15 +87,15 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   )
   
   nonlinear_models = c(formula(speed ~ poly(hour, 3) + minute),
-                       formula(speed ~ poly(hour, 3) + minute + day_label),
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour),
+                       formula(speed ~ poly(hour, 3) + minute + poly(day_label, 3)),
+                       formula(speed ~ poly(hour, 3) + minute + poly(day_label, 3) + weekend + weekend * poly(hour, 3)),
                        # Add in sports games
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + any_game),
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + blackhawks),
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + bears),
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + bulls),
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + cubs),
-                       formula(speed ~ poly(hour, 3) + minute + day_label + weekend + weekend * hour + whitesox)
+                       formula(speed ~ poly(hour, 3) + minute * poly(hour, 3) + poly(day_label, 3) + weekend + weekend * poly(day_label, 3) + any_game),
+                       formula(speed ~ poly(hour, 3) + minute * poly(hour, 3) + poly(day_label, 3) + weekend + weekend * poly(day_label, 3) + blackhawks),
+                       formula(speed ~ poly(hour, 3) + minute * poly(hour, 3) + poly(day_label, 3) + weekend + weekend * poly(day_label, 3) + bears),
+                       formula(speed ~ poly(hour, 3) + minute * poly(hour, 3) + poly(day_label, 3) + weekend + weekend * poly(day_label, 3) + bulls),
+                       formula(speed ~ poly(hour, 3) + minute * poly(hour, 3) + poly(day_label, 3) + weekend + weekend * poly(day_label, 3) + cubs),
+                       formula(speed ~ poly(hour, 3) + minute * poly(hour, 3) + poly(day_label, 3) + weekend + weekend * poly(day_label, 3) + whitesox)
   )
   
   # Create test and train data
@@ -134,6 +133,15 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
     saveRDS(best_linear_fit, paste(MODEL_DIR, save_prefix, '-linear.RData', sep=''))
     saveRDS(best_nonlinear_fit, paste(MODEL_DIR, save_prefix, '-nonlinear.RData', sep=''))
   }
+  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-linear.png', sep=''))}
+  plot(dat$hour, dat$speed)
+  points(dat$hour, suppressWarnings(predict(best_linear_fit, dat)), col='blue')
+  if (save_plots) { dev.off()}
+  
+  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-nonlinear.png', sep=''))}
+  plot(dat$hour, dat$speed)
+  points(dat$hour, suppressWarnings(predict(best_nonlinear_fit, dat)), col='blue')
+  if (save_plots) { dev.off()}
 }
 
 nonparametric_density_estimation <- function (dat, alpha = 0.05,
@@ -146,11 +154,16 @@ nonparametric_density_estimation <- function (dat, alpha = 0.05,
   #    save_plots: A flag to indicate if plots should be saved or displayed.
   #    save_prefix: A prefix to be prepended to all plots saved by this function.
   
-  # Create a density estimate
-  density = density(dat$speed)
+  mu = mean(dat$speed)
+  sigma = sd(dat$speed)
   
-  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-nonpar-density', sep=''))}
+  # Create a density estimate
+  density = density(dat$speed, bw='ucv')
+  
+  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-density.png', sep=''))}
   plot(density)
+  xs = seq(0, 60, 0.1)
+  lines(xs, dnorm(xs, mu, sigma), lty=2)
   if (save_plots) { dev.off()}
 }
 
@@ -161,17 +174,19 @@ run_cross_validation <- function(model, train_data, alphas) {
   #   data_set: The data set that the local linear regression should be trained on.
   #   alphas: A sequence of alphas to be run with
   best_cv = Inf
-  best_alpha = NULL
+  best_alpha = min(alphas)
   for (alpha in alphas) {
-    print(alpha)
     fit = do.call('locfit', list(formula(model), data=train_data, alpha=alpha))
-    #fit = locfit(formula(model), data=train_data, alpha = alpha)
     r = residuals(fit)
     infl = fitted(fit, what = "infl")
     cv_score = mean((r/(1-infl))^2)
-    if (cv_score < best_cv) {
-      best_cv = cv_score
-      best_alpha = alpha
+    if (!is.nan(cv_score)) {
+      if (cv_score < best_cv) {
+        best_cv = cv_score
+        best_alpha = alpha
+      } else {
+        return (best_alpha) # Bail early to speed up computation
+      }
     }
   }
   return (best_alpha)
@@ -190,7 +205,8 @@ select_model_nonparametric <- function(models, dat, test_percent, num_runs = 10)
   for (model in models) {
     all_mses = c()
     
-    best_alpha = 0.1
+    #best_alpha = run_cross_validation(model, dat, seq(0, 1, 0.1))
+    best_alpha = 0.1 # Heuristic value of alpha
     aic_value = aic(formula(model), dat=dat, alpha=best_alpha)
     if (aic_value[4] < min_aic) {
       min_aic = aic_value[4]
@@ -212,14 +228,23 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   if (!is.null(seed)) { set.seed(seed) } 
   
   all_models = list(speed ~ hour,
-                    speed ~ hour + weekend * hour,
+                    speed ~ hour + minute * hour,
+                    speed ~ hour + minute * hour + weekend * hour,
+                    speed ~ hour + minute * hour + weekend * hour + day_label,
                     
                     # Add sports effects
+                    speed ~ hour + weekend * hour + minute * hour + day_label + any_game * hour,
+                    speed ~ hour + weekend * hour + minute * hour + day_label + bulls * hour,
+                    speed ~ hour + weekend * hour + minute * hour + day_label + bears * hour,
+                    speed ~ hour + weekend * hour + minute * hour + day_label + whitesox * hour,
+                    speed ~ hour + weekend * hour + minute * hour + day_label + cubs * hour,
+                    speed ~ hour + weekend * hour + minute * hour + day_label + blackhawks * hour,
+                    # Possibly simpler models
                     speed ~ hour + weekend * hour + any_game * hour,
-                    speed ~ hour + weekend * hour + bears * hour,
-                    speed ~ hour + weekend * hour + bulls * hour,
                     speed ~ hour + weekend * hour + blackhawks * hour,
-                    speed ~ hour + weekend * hour + bulls * hour ,
+                    speed ~ hour + weekend * hour + bulls * hour,
+                    speed ~ hour + weekend * hour + bears * hour,
+                    speed ~ hour + weekend * hour + cubs * hour,
                     speed ~ hour + weekend * hour + whitesox * hour
                     )
   
@@ -231,11 +256,10 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   # First we select a model
   model = select_model_nonparametric(all_models, train_data, test_percent)
   # Determine bandwidth
-  #alpha = run_cross_validation(model, dat, seq(0.1))
-  alpha = 0.1
-  
+  alpha = run_cross_validation(model, dat, seq(0, 1, 0.1))
+  #alpha = 0.1
   # Construct the actual fit
-  fit = locfit(formula(model), data=train_data, alpha=alpha)
+  fit = locfit(model, data=train_data, alpha=alpha)
   
   # Compute the errors
   training_error = mean((predict(fit, train_data) - train_data$speed)^2)
@@ -252,20 +276,24 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   if (save_plots) {
     saveRDS(fit, paste(MODEL_DIR, save_prefix, '-nonparametric.RData', sep=''))
   }
+  if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-nonparametric.png', sep=''))}
+  plot(dat$hour, dat$speed)
+  points(dat$hour, suppressWarnings(predict(fit, dat)), col='blue')
+  if (save_plots) { dev.off()}
 }
 
 run_analysis <- function(data_set, save_plots = FALSE, save_prefix = '') {
   # This function will essentially call all the other functions in this file.
-  parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
-  #parametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  #parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  parametric_regression(data_set, seed = 42, save_plots = save_plots, save_prefix = save_prefix)
   #nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
-  #nonparametric_regression(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  nonparametric_regression(data_set, seed = 42, save_plots = save_plots, save_prefix = save_prefix)
 }
 
 for (region_id in 1:29) {
-  #print(sprintf("Running analysis for %d", region_id))
+  print(sprintf("Running analysis for %d", region_id))
   run_analysis(region_data[region_data$id == region_id,], TRUE, toString(region_id))
 }
 
 #### FOR TESTING ####
-current_data = region_data[region_data$id == 4,]
+current_data = region_data[region_data$id == 1,]
