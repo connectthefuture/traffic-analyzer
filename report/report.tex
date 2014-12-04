@@ -20,7 +20,7 @@
 \maketitle
 %\begin{multicols}{2}
 \section{Introduction}
-Everybody dislikes being stuck in traffic. A recent study has show that traffic and congestion ends up costing Americans over 120 billion dollars a year\cite{costoftraffic}. Clearly it would be desirable to optimize traffic flow and reduce congestion in metropolitan areas. The first step in addressing the problem of traffic is to create accurate models. In this paper, we leverage parametric and non-parametric statistical methods to analyze traffic flow in the city of Chicago. All of the code has been made available at \cite{github} and we have created a webapp \cite{trafficapp} to interactively explore the models produced.
+Everybody dislikes being stuck in traffic; gridlock and delays end up costing Americans billions of dollars every year in lost productivity. Clearly it would be desirable to optimize traffic flow and reduce congestion in metropolitan areas. The first step in addressing the problem of traffic is to create accurate models. In this paper, we leverage parametric and non-parametric statistical methods to analyze traffic flow in the city of Chicago. All of the code has been made available on github\footnote{https://github.com/courageousillumination/traffic-analyzer} and we have created a webapp\footnote{http://chicago-traffic.mooo.com} to interactively explore the models produced.
 \subsection{Goals}
 Our ultimate goal in this exploration is to build models that offer predictive and explanatory power for traffic in the city of Chicago. To do so we will explore two problems: first, how we can model the density of traffic speed, and secondly how we can build a regression model of speed as a function of independent variables. Building a density estimate will allow us to gain a more intuitive understanding of the data, while constructing regression models will hopefully allow us to predict future traffic speeds.
 \section{Description of the Data}
@@ -120,39 +120,28 @@ It is almost universally true that the cubic models outperformed the linear mode
 \subsection{Future Work}
 In this analysis we chose a relatively small subset of factors that we believed would impact traffic speed (time factors and sports games). However, it has become apparent that these factors are not sufficient to fully capture the variability of traffic speeds. The next step would be to expand the number of factors that are included in the analysis; possible factors could include weather (temperature, precipitation, etc.), gas prices, etc. Additionally the data set that we worked with contained only two years of data; a more expansive data set would allow us to better analyze long term trends and factors (population, unemployment, etc.). 
 Finally, the analysis above was carried out ignoring the timeseries nature of the data. Another possible project would be to apply methods that take into account the fact that there is a time based dependence in the data.
+\onecolumn
 \section{Biblography}
 \begin{thebibliography}{9}
 
-\bibitem{costoftraffic}
-  \url{http://www.cebr.com/reports/the-future-economic-and-environmental-costs-of-gridlock/}
-
 \bibitem{regiondataset}
-  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
+	''Chicago Traffic Tracker - Historical Congestion Estimates by Region | City of Chicago | Data Portal.'' Chicago. \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
   
-\bibitem{segmentdataset}
-  \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/77hq-huss}
-
 \bibitem{bullsdata}
-  \url{http://www.landofbasketball.com/results/2010_2011_scores_full.htm}
+	''LandOfBasketball.com, Information About the NBA Universe: Players, Teams and Championships.'' \url{http://www.landofbasketball.com/}
 
 \bibitem{cubsdata}
-  \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
+  ''The Official Site of the Chicago Cubs.'' \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
 
 \bibitem{bearsdata}
+  ''Downloadable CSV and XML Files.'' Sunshine Forecast Downloadable Data Files.
   \url{http://www.repole.com/sun4cast/data.html#dataprior}
 	
 \bibitem{whitesoxdata}
-  \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
+  ''Baseball Almanac."''Baseball Almanac. \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
 
 \bibitem{blackhawksdata}
-  \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
-  
-\bibitem{trafficapp}
-  \url{chicago-traffic.mooo.com}
-  
-\bibitem{github}
-  \url{https://github.com/courageousillumination/traffic-analyzer}
-
+  ''Hockey-Reference.com.'' Hockey-Reference.com. \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
 \end{thebibliography}
 %\end{multicols}
 \begin{landscape}
