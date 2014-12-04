@@ -18,45 +18,52 @@
 
 \begin{document}
 \maketitle
-%\begin{multicols}{2}
 \section{Introduction}
-Everybody dislikes being stuck in traffic; gridlock and delays end up costing Americans billions of dollars every year in lost productivity. Clearly it would be desirable to optimize traffic flow and reduce congestion in metropolitan areas. The first step in addressing the problem of traffic is to create accurate models. In this paper, we leverage parametric and non-parametric statistical methods to analyze traffic flow in the city of Chicago. All of the code has been made available on github\footnote{https://github.com/courageousillumination/traffic-analyzer} and we have created a webapp\footnote{http://chicago-traffic.mooo.com} to interactively explore the models produced.
+Congested roadways, creeping progress, bumper to bumper gridlock; these are all hallmarks of the largest cities in the modern world. Everybody hates traffic and some recent studies have shown that it is costing Americans billions of dollars every year. In this paper we aim to take the first steps in addressing the problem of traffic by performing statistical analysis on historical traffic data from the city of Chicago. We have released the code used to create these models,\footnote{https://github.com/courageousillumination/traffic-analyzer} and constructed an interactive web application to explore the resulting models.\footnote{http://chicago-traffic.mooo.com}
 \subsection{Goals}
-Our ultimate goal in this exploration is to build models that offer predictive and explanatory power for traffic in the city of Chicago. To do so we will explore two problems: first, how we can model the density of traffic speed, and secondly how we can build a regression model of speed as a function of independent variables. Building a density estimate will allow us to gain a more intuitive understanding of the data, while constructing regression models will hopefully allow us to predict future traffic speeds.
+Our ultimate goal in this paper is to build models that offer predictive and explanatory power for traffic Chicago. To do so we will explore two significant statistical problems. The first problem we will examine is that of estimating the probability density of traffic speed; this will help us gain a more intuitive understanding of speed and can be used in future analysis. The second problem we will explore is how we can build a regression model for traffic speed; if the models provide a good fit these will allow us to explain past traffic trends and possibly predict future traffic trends. We will apply both parametric and non-parametric methods to both questions, and perform a comparison at the end of the paper.
 \section{Description of the Data}
-In this paper we leveraged two data sets: one data set containing information about traffic speeds in Chicago, and one containing data about sports games in Chicago.
+In this paper we made use of two data sets: one data set containing information about traffic speeds in Chicago over a two year period, and one containing data about sports games in Chicago over the same period.
 \subsection{Chicago Congestion}
-The main data set of interest is a record of estimated traffic speeds in 29 regions of Chicago gathered from 03/12/2011 until 03/26/2013 \cite{regiondataset}. Figure \ref{appscreenshot} gives a visual representation of these regions. Data was collected every ten minutes for each region, and each data point was obtained by sending GPS pulses to CTA buses in the region at the time and calculating the average speed. This has the effect that regions with fewer CTA bus routes have a slightly higher number of invalid data points (points where there were zero messages). Although it is somewhat difficult to visualize this entire data set, we can get a sense for what the data looks like in some specific regions. Take for example, region 13 (downtown loop). Figure \ref{speedvshour13} shows speed vs hour in region 13; one can clearly see a dip during the working hours, especially around 5 PM. This is part of the variation that we hope to capture.
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=\linewidth]{../plots/trafficapp}
-\caption{Regions from Chicago Congestion dataset (color represents average speed)}
-\label{appscreenshot}
-\end{figure}
+The main data set of interest is a record of estimated traffic speeds in 29 regions of Chicago gathered from 2011-03-12 - 2013-03-26 \cite{regiondataset}. For each data point, CTA busses were polled for their speeds and these speeds were averaged to produce a regional speed. Data was collected every ten minutes over the entire time period. In addition to the time of measurement and the average speed, each data point was supplemented by the number of buses measured, and the number of readings from each bus.
+
+It is somewhat difficult to visualize the entire data set given the long time span and frequent data reads. However, we can still get a sense for some of the structure in this data by examining speeds is specific regions as a function of some of the dependent variables. For example, Figure \ref{speedvshour13} shows speed vs hour in region 13 (the downtown loop area); one can clearly see a dip during the working hours, especially around 5 PM (most plots presented in this paper will be speed vs hour, as this shows interesting behaviour without presenting so much data that it is impossible to interpret). To help the reader get a sense for the regions of interest, Figure \ref{appscreenshot} shows the 29 regions from the data set overlaid on a map of Chicago.
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=\linewidth]{../plots/speedvshour13}
 \caption{Speed vs Hour in Region 13}
 \label{speedvshour13}
 \end{figure}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{../plots/trafficapp}
+\caption{Regions from Chicago Congestion dataset (color represents average speed)}
+\label{appscreenshot}
+\end{figure}
 \subsection{Chicago Sports Games}
-To supplement the speed data set described above we also collected a list of all sports games that happened in Chicago during the period of interest. We predicted that sports games would have a significant impact on traffic and would be a useful feature to add to the data set. Unfortunately, we were unable to find a single comprehensive list of all sports games in Chicago and were forced to gather data from a variety of sources. We gathered the dates of every Bulls \cite{bullsdata}, Bears \cite{bearsdata}, Whitesox \cite{whitesoxdata}, Cubs \cite{cubsdata} and Blackhawks \cite{blackhawksdata} game in the time period and created a data set where each point was a date and the games that occurred on that date. We can see the effects of sports games very prominently if we examine region 11 which contains the United Center (where both the Bulls and Blackhawks play). Figure \ref{region11games} shows the speeds vs hour without a sports game with red crosses and with a sports game in black circles. We can see a significant drop in speed in the evening on days when there was a sports game, a feature which we would like to capture.
+To supplement the speed data set described above we also collected a list of all sports games that happened in Chicago during the period of interest. Our goal was to identify some additional factors (other than time) that would have a significant impact on traffic speeds. Unfortunately, we were unable to find a single comprehensive list of all sports games in Chicago and were forced to compile a full data set from various sources. To do this we gathered the dates of every Bulls \cite{bullsdata},  Cubs \cite{cubsdata}, Bears \cite{bearsdata}, Whitesox \cite{whitesoxdata}, and Blackhawks \cite{blackhawksdata} game in the time period and created a data set where each point was a date and the games that occurred on that date. 
+
+To see the effects of sports games on traffic speed we separated the speed measurements in region 11 (which contains the United Center, the home of both the Bulls and the Blackhawks) into days where there was a Bulls/Blackhawks game and all other days. Figure \ref{region11games} shows the speed on game days and non games as a function of the hour. We can see a significant drop in speed on game days in the later evening; this is another feature that we would like our model to capture.
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=\linewidth]{../plots/region11games}
-\caption{Speed vs Hour in Region 11 with and without sports games}
+\caption{Speed vs Hour in Region 11 with (black Os) and without sports games (red Xs)}
 \label{region11games}
 \end{figure}
 \subsection{Data Preprocessing}
-Once we had the two data sets above we combine them into a single data set. Each data point of the traffic speed data was augmented by adding in all the sports games that occurred on that day. Additionally, to make regression easier we broke down the timestamp for each row into a sequential day label, year, month, day, hour, minute, day of week, and a boolean flag that indicated if the day was a weekend. Finally, we added a column that indicated if there was a sports game of any kind.
+To produce our final data set for analysis we started by combining the two data sets above. Each data point of the traffic speed data was augmented by adding in all the sports games that occurred on that day. Additionally, to make regression easier we broke down the timestamp for each row into a sequential day label, year, month, day, hour, minute, day of week, and a boolean flag that indicated if the day was a weekend. Finally, we added a column that indicated if there was a sports game of any kind.
 
-Having created our final data set, we performed some preprocessing to deal with outliers. First we removed all points that had zero buses travelling through them as these were clearly invalid. Next, we removed all rows that recorded a speed over 60 MPH; all the roads in consideration had speed limits well under 60 MPH, and we considered any reads higher than this to be anomalous. Finally, we removed all rows that recorded a speed of 0 MPH; although this is a possible valid value, it occurred much more frequently than could realistically be expected.
+Having created our final data set, we performed some preprocessing to deal with outliers. First we removed all the data points that recorded messages from zero buses as these are clearly invalid reads. Next, we removed all rows that recorded a speed over 60 MPH; all the roads in consideration had speed limits well under 60 MPH, and we considered any reads higher than this to be anomalous. Finally, we removed all rows that recorded a speed of 0 MPH; although this is a possible valid value, it occurred much more frequently than could realistically be expected and we were unable to discern valid reads vs invalid reads in this case.
 \section{Parametric Analysis}
-In this section we discuss the parametric methods we applied to the traffic dataset. All of the numeric results from this section and the next are collected in Table \ref{resultstable}. Both density estimation and regression were run over all 29 regions separately; generally we only discuss individual regions if they show interesting behaviours or are exemplary of a broader class of regions.
+In this section we discuss the parametric methods we applied to the traffic dataset. All of the numeric results from this section are collected in Table \ref{resultstable}. Both density estimation and regression were run over all 29 regions separately; for the sake of brevity we only include plots for individual regions or discuss them if they show interesting behaviours or are exemplary of a broader class of regions.
 \subsection{Density Estimation}
-To create a parametric estimate of the density it was necessary for us to create a parametric model for the underlying distribution. We decided to model the density as a single univariant normal distribution. This decision was made after preliminary investigation of the data showed it to be unimodal, and roughly normal. Once we assumed a normal model, we were left with the problem of parameter estimation. We chose to use the maximum likelihood estimators instead of Bayseian estimators. Given these choices we fitted a density by simply taking the sample mean and standard deviation and constructing a normal distribution with these parameters. The raw values are listed in Table \ref{resultstable} where we also give 95\% confidence intervals. We also produced plots of the predicted densities, but these are not very useful by themselves. Plots can be found in the nonparametric density estimation section below.
+To create a parametric estimate of the density of traffic speed it was necessary for us to assume a single model for the underlying distribution. We chose to model the density as a single normal distribution. We had originally considered modelling the data as a mixture of Gaussians, but we ruled this out since preliminary analysis showed the data to be mainly unimodal, and lacked the wide peak that is indicative of a mixture of Gaussians. We also considered modelling the data using other well known distributions but none of these seemed to fit the data particularly well.
 
-In addition to estimating the distribution for speed in each region we generated QQ plots in order to asses how closely the data conformed to the normality assumption. Unfortunately, these plots showed significant nonlinarites, indicating that the distributions weren't quite normal. However, the nonlinearities were not consistent across regions and generally didn't match any standard distribution that we were aware of. For example in region 13 (Figure \ref{region13qq}) it is mostly linear until the far right side at which point is experiences a significant spike; in contrast region 16 (Figure \ref{region16qq}) shows many nonlinearities especially on the left side. Thus, although the normal distribution was clearly insufficient, we were unsure how to proceed in a parametric manner.
+Once we assumed this model of the data, we were left with the problem of parameter estimation. We chose to use the maximum likelihood estimators for estimating the parameters. As an alternative we could have employed a Bayseian method such as maximum a posterior estimates, but for this paper we wanted to approach this data from a frequentist perspective.
+
+Given this model and method for estimating perameters we could fit our density by simply  calculating the sample mean and standard deviation and using these to construct a normal distribution. We recorded the estimated mean and standard deviation in  Table \ref{resultstable} along with 95\% confidence intervals for both. We also produced plots of each fitted density; however, these plots are more useful when compared to the nonparametric density estimation and so will be presented in the Nonparametric Density Estimation section below.
+
+In addition to estimating the distribution for speed in each region we generated QQ plots to try and get a sense of how well the data fit our model. Unfortunately, these plots showed significant nonlinearities, indicating that the distributions deviated from our normal assumption. Moreover, the deviations were not consistent across regions and generally didn't match any standard distribution that we were aware of. For example in region 13 (Figure \ref{region13qq}) it is mostly linear until the far right side at which point is experiences a significant spike; in contrast region 16 (Figure \ref{region16qq}) shows many nonlinearities especially on the left side of the plot. Thus, although it became apparent that our normal assumptions were not necessarily valid, we were unsure how to proceed in a parametric manner.
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=\linewidth]{../plots/13-qqplot}
@@ -70,83 +77,75 @@ In addition to estimating the distribution for speed in each region we generated
 \label{region16qq}
 \end{figure}
 \subsection{Regression Analysis}
-Having looked at density estimation we then turned to training parametric regression models for traffic speed. In our analysis we tried two different classes of models: linear models, and cubic models. We wanted to form linear models, which assume that the response is a linear function of the input, as something of a baseline; these being the simplest models, should perform the worst. We opted to form cubic models, which assume the response is cubic in terms of the input, under the assumption that linear models would not be sufficient to fully explain the data. We chose cubic models to avoid over fitting after some exploratory analysis indicated that higher order models weren't strictly necessary. We chose to fit these models using least squares regression, mainly for its strong properties, and ease of use.
+Having looked at density estimation we then turned to training parametric regression models for traffic speed.
+In the course of our analysis we trained and tested two different classes of parametric models: linear models, and cubic models. In both of these cases we make the assumption that the data come from some linear/cubic model of the data plus some additional noise that is drawn iid from a zero mean normal distribution (in reality, this assumption may be false; see Future Work). We wanted to form linear model as something of a baseline; these being one of the  simplest possible models would give us a sense of how easily we could fit the data. We opted to form cubic models under the assumption that linear models would be insufficient to fully explain the data, and that more complexity would be needed. We chose cubic models to avoid over fitting after some exploratory analysis indicated that cubic models might be sufficient. We chose to fit these models using least squares regression, mainly for its computational speed and ease of use.
 
-In both the linear and the cubic cases we first partitioned the data into training and test sets; the test set was a 25\% random sample of the whole data and the training set was the remaining segment (we added the ability to seed the random number generator to encourage reproducible runs). After we partitioned the data we performed model selection using Akaike information criterion (AIC). Due to time and computation constraints we were unable to examine all possible models; instead we hand selected a set of models that we expected to fit the data well. We then trained each of these models on the training set and chose the model with the lowest AIC. Finally we ran the best model against the test set and computed the testing error. Table \ref{resultstable} contains the training error, test error, and $r^2$ for the best linear and nonlinear models. We can see that the results varied significantly depending on the region. For example, the regressions performed very well in region 19 (figure \ref{region19parametricregression}), but very poorly in region 17 (figure \ref{region17parametricregression}). We will address this more in depth in the discussion section.
+In both the linear and the cubic cases we first partitioned the data into training and test sets; the test set was a 25\% random sample of the whole data and the training set was the remaining 75\% (we added the ability to seed the random number generator to allow for reproducible runs). After we partitioned the data we performed model selection using Akaike information criterion (AIC). Due to time and computation constraints we were unable to examine all possible models; instead we hand selected a set of models that we expected to fit the data well. We then trained each of these models on the training set and chose the model with the lowest AIC. Finally we ran the best model against the test set and computed the testing error. Table \ref{resultstable} contains the training error, test error, and $r^2$ for the best linear and nonlinear models. We also computed confidence interval for the coefficients in each regression, but due to space constraints they will no be included in this paper.
+
+From this analysis we can see that the ruslts varied greatly between regions. For example, the regressions performed very well in region 12 (figure \ref{region12parametricregression}) where we achived a $r^2$ of 0.64 for the cubic model. However, the fit was much worse in region 28  (figure \ref{region28parametricregression}) where the $r^2$ from both fits was less that 0.1. We will explore why we see these vastly different results in the Discussion section.
 \begin{figure}[!ht]
 \centering
-\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/19-linear}} 
-\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/19-nonlinear}} 
-\caption{Regression and real data vs hour for region 19}
-\label{region19parametricregression}
+\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/12-linear}} 
+\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/12-nonlinear}} 
+\caption{Regression and real data vs hour for region 12}
+\label{region12parametricregression}
 \end{figure}
-
 \begin{figure}[!ht]
 \centering
-\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/17-linear}} 
-\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/17-nonlinear}} 
-\caption{Regression and real data vs hour for region 17}
-\label{region17parametricregression}
+\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/28-linear}} 
+\subfloat[]{\includegraphics[width = 0.5\linewidth]{../plots/28-nonlinear}} 
+\caption{Regression and real data vs hour for region 28}
+\label{region28parametricregression}
 \end{figure}
-
 \section{Nonparametric Analysis}
-In this section we relaxed the assumptions made above and performed non parametric analysis on the traffic data set. Once again we created models for each region separately and all numeric results are summarized in Table \ref{resultstable}.
+In this section we wanted to analyze the dataset nonparametrically, making much weaker assumptions than we did above. Once again we created models for each region separately and all numeric results are summarized in Table \ref{resultstable}.
 \subsection{Density Estimation}
-We saw above that parametric density estimation proved to be a poor tool for this data set. In part this is because we don't entirely understand what affects traffic speeds and so have difficulty choosing a useful parametric model; more importantly the data doesn't seem to follow any well known distribution. As such this is a perfect use for a nonparametric density estimate. In our case we chose to use kernel density estimators (KDE). 
+We saw above that parametric density estimation hit a dead end after producing QQ plots and recognizing that the normal assumption was invalid; it seems that the data doesn't conform well to any well known distribution. As such this is a perfect use for a nonparametric density estimate. In our case we chose to use kernel density estimators (KDE). This method makes very weak assumptions on the underlying density (mainly that the true distribution has two continuous derivatives), and has a theoretically optimal rate of convergence. 
 
-Our KDEs were created using an Epanechnikov kernel, with bandwidth chosen by cross validation. We then computed 95\% confidence bands for each fit and plotted them along side the parametric density estimate. Originally the kernel density estimates were quite noisy, but we discovered that this was caused by many repeated values in the data set. To remedy this we add a small amount of noise to the data set. This made the kernel density come out much more smoothly. Comparing the KDE to the Gaussian estimate, we can see that the KDE shows significantly more detail of the underlying distribution. For example, consider region 13 (Figure \ref{region13density}); in the Gausisan we can't see much at all, but in the KDE we can see a small, but certainly present, hump on the right side.
+Our KDEs were created using an Epanechnikov kernel, with bandwidth chosen by cross validation. We then computed 95\% confidence bands for each fit and plotted them along side the parametric density estimate. Originally the kernel density estimates were quite noisy, but we discovered that this was caused by many repeated values in the data set. To remedy this we add a small amount of noise to the data set (drawn from a $N(0, 0.25)$ distribution; this is significantly smaller than the noise level in any region). This made the kernel density come out much more smoothly. Comparing the KDE to the Gaussian estimate, we can see that the KDE shows significantly more detail of the underlying distribution, without producing excessive irregularities. For example, consider region 13 (Figure \ref{region13density}); under the parametric model we can't see much at all, but in the KDE we can see a small, but certainly present, hump on the right side. In other regions, such as region 22 (Figure \ref{region22density}) we can see that the parametric and nonparametric fits are relatively, close, with the exception being that the nonparametric fit is significantly more peaked.
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=\linewidth]{../plots/13-density}
-\caption{Region 13 parametric and nonparametric densities}
+\caption{Region 13 parametric (dashed) and nonparametric (solid) densities}
 \label{region13density}
 \end{figure}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{../plots/22-density}
+\caption{Region 22 parametric (dashed) and nonparametric (solid) densities}
+\label{region22density}
+\end{figure}
 \subsection{Regression Analysis}
-In an attempt to improve on the parametric models we wanted to fit a nonparametric model to the data. To do this we chose to model the data using a multi-dimensional local linear regression. This model makes very weak assumptions about the underlying function (depending upon the desired convergence rate either that it is Lipschitz Continuous or that it has two bounded derivatives). Originally we considered using a Generalized Additive Model (GAM) since local linear regressions begin to degrade in higher dimensions. However, several of the models that we wanted to experiment with involved interaction terms which GAMs explicitly disallow. As such, we decided to stick with a local linear regression, despite the curse of dimensionality.
+In an attempt to improve on the parametric models we wanted to fit a nonparametric regression model to the data. To do this we chose to model the data using a multi-dimensional local linear regression. This model makes very weak assumptions about the underlying function (depending upon the desired convergence rate either that it is Lipschitz Continuous or that it has two bounded derivatives). Originally we considered using a generalized additive model (GAM) since local linear regressions begin to degrade in higher dimensions and we were planning on performing a higher dimensional regression. However, several of the models that we wanted to experiment with involved interaction terms which GAMs explicitly disallow. As such, we decided to stick with a local linear regression, despite the curse of dimensionality.
 
-Our methodology for generating a local linear model was very similar to our methodology in the parametric case: we partitioned the data set, did model selection using AIC, and computed the training/test error. The one addition is that we implemented cross validation for selecting the optimal bandwidth. Unfortunately due, to computation constraints we were unable to use cross validation during model selection; instead we used a heuristic value for the bandwidth (obtained through manual experimentation) and used the AIC value for this fit. We could have used leave one out cross validation instead of AIC during model selection, but we wanted to keep it consistent with our parametric analysis, and the two are asymptotically equivalent. Once we had selected a model we performed cross validation to select the optimal bandwidth before training the final model. Table \ref{resultstable} contains the test and training error for the optimal fit for each region. 
+Our methodology for generating a local linear model was very similar to our methodology in the parametric case: we partitioned the data set, did model selection using AIC, and computed the training/test error. The one addition is that we implemented cross validation for selecting the optimal bandwidth. Unfortunately due, to computation and time constraints, we were unable to use cross validation during model selection; instead we used a heuristic value for the bandwidth (obtained through manual experimentation) and used the AIC value for this fit.\footnote{We could have used leave one out cross validation instead of AIC during model selection, but we wanted to keep it consistent with our parametric analysis, and the two are asymptotically equivalent.} Once we had selected a model we performed cross validation to select the optimal bandwidth before training the final model. Table \ref{resultstable} contains the test and training error for the optimal fit for each region. In general, the nonparametric models seemed to outperform the parametric models; for example, if we look at region 12 (Figure \ref{region12nonparametric}) we can see that the nonparametric fit produces significantly lower test and training error than the parametric models. We discuss the comparison between these two more below.
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{../plots/12-nonparametric}
+\caption{Region 12 nonparametric regression}
+\label{region12nonparametric}
+\end{figure}
 \section{Discussion}
 \subsection{Density Estimation}
-It should be clear that the nonparametric density estimate is a better tool than the parametric density estimate. In part this is because we were unsure of what distribution we should chose for the parametric method; another part of is that the data doesn't seem to follow any well known distribution, with the distribution differing across regions. Although we could make further attempts to parametrize the density estimate, we believe that the estimates produced by KDE are sufficient for our current goals of exploring the data.
+It should be clear that the nonparametric density estimate is a much better tool for this data set than the parametric density estimate. In part this is because we were unsure of what distribution should be chosen when constructing a parametric density model; another part of is that the data doesn't seem to follow any well known distribution and that the distribution seemed to vary from region to region. Although we could make further attempts to parametrize the density estimate (using the kernel density estimates to lead our parametrization), we believe that the estimates produced by KDE are sufficient for our current goals of exploring the data.
 \subsection{Regression Analysis}
-Looking at the results from both parametric and non parametric analysis it seems that there were two types of regions: one group of regions was fit relatively well by the models in this paper (generally leading to a $r^2$ between 0.4 and 0.5 for a non linear model), and the other group on which the models failed miserably. Most of the regions fell into the first group, but regions 2, 16, 17, 22, 25, 27, 28, and 29 all fell in the second group. Interestingly all of these regions, except 16, fall on the geographic periphery of the measurements. 16 is an interesting corner case because it seems to exhibit low hourly variation (see Figure \ref{region16speed}), but still has very high variance. It may be that there are factors affecting the speed in region 16 that have not been accounted for in our study.
+Looking at the results from both parametric and non parametric analysis it seems that there were two types of regions: one group of regions was fit relatively well by the models in this paper (generally leading to a $r^2$ between 0.4 and 0.5 for a non linear model), and the other group on which all models failed miserably. Most of the regions fell into the first group, but regions 2, 16, 17, 22, 25, 27, 28, and 29 all fell in the second group. All of these regions, except 16, fall on the geographic periphery of the measurements. 16 is an interesting corner case because it seems to exhibit low hourly variation (see Figure \ref{region16speed}), but still has very high variance; the other independent variables in our study show the same pattern. It seems that for this region, and possibly the other regions in group 2, our study is missing some key factors that influence traffic speed.
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=\linewidth]{../plots/region16speed}
 \caption{Region 16 speed vs hour}
 \label{region16speed}
 \end{figure}
-It is almost universally true that the cubic models outperformed the linear models. This is to be expected since cubic models are a superset of linear models. The effectiveness of the nonparametric models is more complicated. In regions near the Loop (12, 13, 14, 15) the nonparametric model significantly outperformed the cubic model on both the test and the train data. However, in other regions the nonparametric model performed at about the same level, or slightly worse than the cubic models. This could be indicative of the fact that traffic patterns are more complex in metropolitan areas.
+
+It is almost universally true that the cubic models outperformed the linear models; this is to be expected since cubic models are a superset of linear models and the data set is large enough that overfitting should not be a significant problem (at least with cubic models). The effectiveness of the nonparametric models is more complicated. In regions near down town Chicago (12, 13, 14, 15) the nonparametric model significantly outperformed the cubic model on both the test and the train data. However, in other regions the nonparametric model performed at about the same level, or slightly worse than the cubic models. This could be indicative of the fact that traffic patterns are more complex in metropolitan areas, but that we see overfitting outside of these areas (despite the cross validation).
 \subsection{Future Work}
 In this analysis we chose a relatively small subset of factors that we believed would impact traffic speed (time factors and sports games). However, it has become apparent that these factors are not sufficient to fully capture the variability of traffic speeds. The next step would be to expand the number of factors that are included in the analysis; possible factors could include weather (temperature, precipitation, etc.), gas prices, etc. Additionally the data set that we worked with contained only two years of data; a more expansive data set would allow us to better analyze long term trends and factors (population, unemployment, etc.). 
 Finally, the analysis above was carried out ignoring the timeseries nature of the data. Another possible project would be to apply methods that take into account the fact that there is a time based dependence in the data.
 \onecolumn
-\section{Biblography}
-\begin{thebibliography}{9}
-
-\bibitem{regiondataset}
-	''Chicago Traffic Tracker - Historical Congestion Estimates by Region | City of Chicago | Data Portal.'' Chicago. \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
-  
-\bibitem{bullsdata}
-	''LandOfBasketball.com, Information About the NBA Universe: Players, Teams and Championships.'' \url{http://www.landofbasketball.com/}
-
-\bibitem{cubsdata}
-  ''The Official Site of the Chicago Cubs.'' \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
-
-\bibitem{bearsdata}
-  ''Downloadable CSV and XML Files.'' Sunshine Forecast Downloadable Data Files.
-  \url{http://www.repole.com/sun4cast/data.html#dataprior}
-	
-\bibitem{whitesoxdata}
-  ''Baseball Almanac."''Baseball Almanac. \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
-
-\bibitem{blackhawksdata}
-  ''Hockey-Reference.com.'' Hockey-Reference.com. \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
-\end{thebibliography}
-%\end{multicols}
 \begin{landscape}
 \begin{table}
 \small
+\centering
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|}
 \hline
 ID & $\mu$ & $\sigma^2$ & L Train & NL Train & NP Train & L Test & NL Test & NP Test & L $r^2$ & NL $r^2$\\\hline
@@ -184,4 +183,26 @@ ID & $\mu$ & $\sigma^2$ & L Train & NL Train & NP Train & L Test & NL Test & NP 
 \label{resultstable}
 \end{table}
 \end{landscape}
+\section{Biblography}
+\begin{thebibliography}{9}
+
+\bibitem{regiondataset}
+	''Chicago Traffic Tracker - Historical Congestion Estimates by Region | City of Chicago | Data Portal.'' Chicago. \url{https://data.cityofchicago.org/Transportation/Chicago-Traffic-Tracker-Historical-Congestion-Esti/emtn-qqdi}
+  
+\bibitem{bullsdata}
+	''LandOfBasketball.com, Information About the NBA Universe: Players, Teams and Championships.'' \url{http://www.landofbasketball.com/}
+
+\bibitem{cubsdata}
+  ''The Official Site of the Chicago Cubs.'' \url{http://chicago.cubs.mlb.com/schedule/sortable.jsp?c_id=chc&year=2011}
+
+\bibitem{bearsdata}
+  ''Downloadable CSV and XML Files.'' Sunshine Forecast Downloadable Data Files.
+  \url{http://www.repole.com/sun4cast/data.html#dataprior}
+	
+\bibitem{whitesoxdata}
+  ''Baseball Almanac."''Baseball Almanac. \url{http://www.baseball-almanac.com/teamstats/schedule.php?y=2013&t=CHA}
+
+\bibitem{blackhawksdata}
+  ''Hockey-Reference.com.'' Hockey-Reference.com. \url{http://www.hockey-reference.com/teams/CHI/2011_games.html}
+\end{thebibliography}
 \end{document}
