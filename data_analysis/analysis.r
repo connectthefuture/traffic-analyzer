@@ -6,8 +6,9 @@ MODEL_DIR = '../models/'
 # Load and prepare the data
 region_data <- read.table('../dat/augmented_region_data.csv', header=TRUE, sep=',')
 
-# Add a little noise to the data to remove duplicate speed
-region_data$speed = region_data$speed + rnorm(nrow(region_data), 0, 0.25)
+# Add a little noise to the data to (we do this since there are a lot of repeated values
+# in the data that throw off density estimates)
+region_data$speed = region_data$speed + rnorm(nrow(region_data), 0, 0.01)
 
 # Convert all sports games to factors
 region_data$any_game = factor(region_data$any_game)
@@ -16,7 +17,6 @@ region_data$bulls = factor(region_data$bulls)
 region_data$blackhawks = factor(region_data$blackhawks)
 region_data$bears = factor(region_data$bears)
 region_data$whitesox = factor(region_data$whitesox)
-
 
 parametric_density_estimation <- function (dat, alpha = 0.05, 
                                            save_plots=FALSE, save_prefix='') {
@@ -32,9 +32,11 @@ parametric_density_estimation <- function (dat, alpha = 0.05,
   mu = mean(dat$speed)
   sigma2 = var(dat$speed)
   mu_error = qnorm(1 - alpha / 2) * sqrt(sigma2) / sqrt(n)
-  sigma2_error = 2 * sigma2^2 / (n - 1)
+  sigma2_upper = (n - 1) * sigma2 / qchisq((1 - alpha)/2, n - 1) - sigma2
+  sigma2_lower = sigma2 - (n - 1) * sigma2 / qchisq((1 - alpha)/2, n - 1, lower.tail = FALSE)
+  
   # print the results
-  print(sprintf("%.2f $\\pm$ %.2E, %.2f $\\pm$ %.2E", mu, mu_error, sigma2, sigma2_error))
+  print(sprintf("%.2f $\\pm$ %.2E, %.2f (-%.2E, +%.2E)", mu, mu_error, sigma2, sigma2_lower, sigma2_upper))
   
   # Plotting
   if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-qqplot', sep=''))}
@@ -57,9 +59,9 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   #    save_prefix: A prefix to be prepended to all plots saved by this function.
   
   
-  select_model = function(models, train_data, num_runs = 10) {
-    # This function will test several models and choose the best model. It runs num_runs
-    # times and takes the model with the lowest average error.
+  select_model = function(models, train_data) {
+    # This function will test several models and choose the best model. It does this
+    # by computing the AIC for each model and choosing the best one.
     min_aic = Inf
     best_model = NULL
     for (model in models) {
@@ -72,8 +74,11 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
     }
     return (best_model)
   }
-  if (!is.null(seed)) { set.seed(seed) } 
   
+  # Make sure we set the seed properly
+  if (!is.null(seed)) { set.seed(seed) } 
+
+  # Define models that we will try
   linear_models = c(formula(speed ~ hour + minute),
                     formula(speed ~ hour + minute + day_label),
                     formula(speed ~ hour + minute + day_label + weekend + weekend * hour),
@@ -86,7 +91,7 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
                     formula(speed ~ hour + minute + day_label + weekend + weekend * hour + whitesox)
   )
   
-  nonlinear_models = c(formula(speed ~ poly(hour, 3) + minute),
+  nonlinear_models = c(formula(speed ~ poly(hour, 3)),
                        formula(speed ~ poly(hour, 3) + minute + poly(day_label, 3)),
                        formula(speed ~ poly(hour, 3) + minute + poly(day_label, 3) + weekend + weekend * poly(hour, 3)),
                        # Add in sports games
@@ -111,7 +116,7 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   best_linear_fit = lm(best_linear_model, train_data)
   best_nonlinear_fit = lm(best_nonlinear_model, train_data)
   
-  # Calculate MSE for the fits
+  # Calculate training and test error for the fits
   linear_training_error = mean(best_linear_fit$residuals^2)
   linear_testing_error = mean((predict(best_linear_fit, test_data) - test_data$speed)^2)
   nonlinear_training_error = mean(best_nonlinear_fit$residuals^2)
@@ -127,6 +132,10 @@ parametric_regression <- function (dat, test_percent = 0.25, seed=NULL,
   print(sprintf("%.2f & %.2f, %.2f, %.2f, %.2f, %.2f", 
                 linear_training_error, linear_testing_error, summary(best_linear_fit)$r.squared,
                 nonlinear_training_error, nonlinear_testing_error, summary(best_nonlinear_fit)$r.squared))
+  
+  # For standard erros (which can be used to construct confidence intervals)
+  # print(summary(best_linear_fit))
+  # print(summary(best_nonlinear_fit))
   
   # Save any models/graphs
   if (save_plots) {
@@ -154,16 +163,13 @@ nonparametric_density_estimation <- function (dat, alpha = 0.05,
   #    save_plots: A flag to indicate if plots should be saved or displayed.
   #    save_prefix: A prefix to be prepended to all plots saved by this function.
   
-  mu = mean(dat$speed)
-  sigma = sd(dat$speed)
-  
   # Create a density estimate
-  density = density(dat$speed, bw='ucv')
+  density = density(dat$speed, bw='nrd')
   
   if (save_plots) {png(paste(PLOT_DIR, save_prefix, '-density.png', sep=''))}
   plot(density)
   xs = seq(0, 60, 0.1)
-  lines(xs, dnorm(xs, mu, sigma), lty=2)
+  lines(xs, dnorm(xs, mean(dat$speed),sd(dat$speed)), lty=2)
   if (save_plots) { dev.off()}
 }
 
@@ -192,14 +198,13 @@ run_cross_validation <- function(model, train_data, alphas) {
   return (best_alpha)
 }
 
-select_model_nonparametric <- function(models, dat, test_percent, num_runs = 10) {
+select_model_nonparametric <- function(models, dat, test_percent) {
   # This function will select the model that produces the lowest average risk. This 
   # uses AIC and takes the minimum value.
   # Args:
   #   models: All models that will be tested.
   #   dat: Data that the model should be trained/tested on.
   #   test_percent: What percent of dat should be held out as test data.
-  #   num_runs: How many runs should be used to estimate the risk of a specific model.
   min_aic = Inf
   best_model = NULL
   for (model in models) {
@@ -239,6 +244,7 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
                     speed ~ hour + weekend * hour + minute * hour + day_label + whitesox * hour,
                     speed ~ hour + weekend * hour + minute * hour + day_label + cubs * hour,
                     speed ~ hour + weekend * hour + minute * hour + day_label + blackhawks * hour,
+                    
                     # Possibly simpler models
                     speed ~ hour + weekend * hour + any_game * hour,
                     speed ~ hour + weekend * hour + blackhawks * hour,
@@ -255,9 +261,8 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   
   # First we select a model
   model = select_model_nonparametric(all_models, train_data, test_percent)
-  # Determine bandwidth
+  # Determine the bandwidth
   alpha = run_cross_validation(model, dat, seq(0, 1, 0.1))
-  #alpha = 0.1
   # Construct the actual fit
   fit = locfit(model, data=train_data, alpha=alpha)
   
@@ -273,6 +278,11 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
   print(sprintf(", %.2f, %.2f", training_error, testing_error))
   
   # Save plots and models
+  # To plot confidence bands use the following (generally this is hard to interpert for
+  # higher dimensional data)
+  # crit(fit) <- crit(fit,cov=0.99)
+  # plot(fit, band="local")
+  
   if (save_plots) {
     saveRDS(fit, paste(MODEL_DIR, save_prefix, '-nonparametric.RData', sep=''))
   }
@@ -284,9 +294,9 @@ nonparametric_regression <- function (dat, test_percent = 0.25, seed = NULL,
 
 run_analysis <- function(data_set, save_plots = FALSE, save_prefix = '') {
   # This function will essentially call all the other functions in this file.
-  #parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  parametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
   parametric_regression(data_set, seed = 42, save_plots = save_plots, save_prefix = save_prefix)
-  #nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
+  nonparametric_density_estimation(data_set, save_plots = save_plots, save_prefix = save_prefix)
   nonparametric_regression(data_set, seed = 42, save_plots = save_plots, save_prefix = save_prefix)
 }
 
@@ -296,4 +306,4 @@ for (region_id in 1:29) {
 }
 
 #### FOR TESTING ####
-current_data = region_data[region_data$id == 1,]
+current_data = region_data[region_data$id == 13,]

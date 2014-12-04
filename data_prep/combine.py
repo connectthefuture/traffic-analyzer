@@ -22,7 +22,7 @@ def read_sports_games(sports_game_file):
 def augment_data(source_file_name, dest_file_name, sports_games):
     """
     This function will augment congestion data. It will convert the single
-    datetime to many different variables, and add the sports games.
+    datetime to many different variables, and adds the sports games.
     """
 
     sports_data, sports_header = read_sports_games(sports_games)

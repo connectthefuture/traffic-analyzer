@@ -120,4 +120,5 @@ def aggregate():
                          "cubs", "whitesox", "blackhawks"))
         writer.writerows(all_values)
 
-aggregate()
+if __name__ == "__main__":
+    aggregate()
